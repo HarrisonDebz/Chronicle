@@ -1,8 +1,11 @@
 import EventCard from "../components/EventCard";
-import { demoEvents } from "../data/demoEvents";
+import { useEvents } from "../hooks/useEvents";
 
 
 export default function Home() {
+
+    const { events } = useEvents();
+
 
     return (
         <main className="min-h-screen p-8">
@@ -15,7 +18,7 @@ export default function Home() {
             <div className="grid gap-5 md:grid-cols-2">
 
                 {
-                    demoEvents.map(event => (
+                    events.map(event => (
                         <EventCard
                             key={event.id}
                             event={event}

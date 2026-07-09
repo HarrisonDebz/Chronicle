@@ -1,33 +1,75 @@
-import EventCard from "../components/EventCard";
+import { useState } from "react";
+
+import AddEventButton from "../components/AddEventButton";
+import AddEventModal from "../components/AddEventModal";
+import DeleteConfirmModal from "../components/DeleteConfirmModal";
+import EmptyState from "../components/EmptyState";
+import EventSection from "../components/EventSection";
+
 import { useEvents } from "../hooks/useEvents";
 
+import {
+    getUpcomingEvents,
+    getMemoryEvents,
+} from "../utils/eventFilters";
+
+import type { ChronicleEvent } from "../types/Event";
 
 export default function Home() {
+    const {
+        events,
+        addEvent,
+        deleteEvent,
+    } = useEvents();
 
-    const { events } = useEvents();
+    const [open, setOpen] = useState(false);
 
+    const [eventToDelete, setEventToDelete] =
+        useState<ChronicleEvent | null>(null);
+
+    const upcomingEvents = getUpcomingEvents(events);
+
+    const memoryEvents = getMemoryEvents(events);
 
     return (
         <main className="min-h-screen p-8">
-
-            <h1 className="text-4xl font-bold mb-8">
+            <h1 className="mb-8 text-4xl font-bold">
                 Chronicle
             </h1>
 
+            {events.length > 0 ? (
+                <>
+                    <EventSection
+                        title="Upcoming"
+                        events={upcomingEvents}
+                        onDeleteRequest={setEventToDelete}
+                    />
 
-            <div className="grid gap-5 md:grid-cols-2">
+                    <EventSection
+                        title="Memories"
+                        events={memoryEvents}
+                        onDeleteRequest={setEventToDelete}
+                    />
+                </>
+            ) : (
+                <EmptyState />
+            )}
 
-                {
-                    events.map(event => (
-                        <EventCard
-                            key={event.id}
-                            event={event}
-                        />
-                    ))
-                }
+            <AddEventButton
+                onClick={() => setOpen(true)}
+            />
 
-            </div>
+            <AddEventModal
+                open={open}
+                onClose={() => setOpen(false)}
+                onSubmit={addEvent}
+            />
 
+            <DeleteConfirmModal
+                event={eventToDelete}
+                onClose={() => setEventToDelete(null)}
+                onConfirm={deleteEvent}
+            />
         </main>
     );
 }

@@ -1,75 +1,218 @@
-# React + TypeScript + Vite
+# Chronicle
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Chronicle is a clean time-tracking web app for counting down to future events and counting up from meaningful past moments.
 
-Currently, two official plugins are available:
+It helps users track upcoming milestones, memories, deadlines, anniversaries, goals, and personal events in one simple dashboard.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+* Create countdown events
+* Create count-up memory events
+* Automatically move expired countdowns into Memories
+* Store events in LocalStorage
+* Delete events with confirmation
+* Sort upcoming events by soonest first
+* Sort memories by newest first
+* Category icons
+* Progress indicators
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+  * Orange bars for upcoming events
+  * Green completed bars for memories
+* Form validation
+* Responsive card-based layout
+* Smooth UI animations with Framer Motion
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
+* Framer Motion
+* date-fns
+* lucide-react
+* UUID
+* LocalStorage
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Project Structure
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```text
+src/
+├── components/
+│   ├── AddEventButton.tsx
+│   ├── AddEventModal.tsx
+│   ├── DeleteConfirmModal.tsx
+│   ├── EmptyState.tsx
+│   ├── EventCard.tsx
+│   ├── EventForm.tsx
+│   └── EventSection.tsx
+│
+├── data/
+│   └── demoEvents.ts
+│
+├── hooks/
+│   ├── useEvents.ts
+│   └── useLocalStorage.ts
+│
+├── pages/
+│   └── Home.tsx
+│
+├── types/
+│   └── Event.ts
+│
+├── utils/
+│   ├── categories.ts
+│   ├── date.ts
+│   ├── eventFilters.ts
+│   ├── eventStatus.ts
+│   └── progress.ts
+│
+├── App.tsx
+├── index.css
+└── main.tsx
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 1. Clone the repository
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+git clone https://github.com/your-username/chronicle.git
+cd chronicle
 ```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Start the development server
+
+```bash
+npm run dev
+```
+
+The app should be available at:
+
+```text
+http://localhost:5173/
+```
+
+## Available Scripts
+
+```bash
+npm run dev
+```
+
+Starts the development server.
+
+```bash
+npm run build
+```
+
+Creates a production build.
+
+```bash
+npm run preview
+```
+
+Previews the production build locally.
+
+```bash
+npm run lint
+```
+
+Runs linting checks.
+
+## Event Types
+
+Chronicle supports two main event types:
+
+### Countdown
+
+Used for future events.
+
+Examples:
+
+* Graduation
+* Exams
+* Birthdays
+* Project deadlines
+* World Cup matches
+
+### Count Up
+
+Used for past events and memories.
+
+Examples:
+
+* Started coding
+* Relationship anniversary
+* First GitHub commit
+* Started university
+* Personal milestones
+
+## Event Categories
+
+Current categories include:
+
+* Birthday
+* Relationship
+* Education
+* Coding
+* Sports
+* Holiday
+* Goal
+* Other
+
+Each category has its own icon.
+
+## Progress Logic
+
+Chronicle uses event status to determine how progress should appear.
+
+Upcoming countdowns display an orange remaining-time bar.
+
+Completed events and memories display a full green progress bar with a completion badge.
+
+Expired countdowns are automatically treated as memories.
+
+## Roadmap
+
+### Version 1
+
+* Countdown events
+* Count-up events
+* LocalStorage persistence
+* Event creation
+* Event deletion
+* Automatic completed-event handling
+* Category icons
+* Progress indicators
+
+### Version 2
+
+* Search and filtering
+* Count view
+* Calendar view
+* Journey/timeline view
+* Event editing
+* Recurring event logic
+* Import/export JSON
+* Dark mode
+* Better mobile polish
+
+## Why This Project Exists
+
+Chronicle started as a simple interactive countdown website, but the idea expanded into a personal time dashboard.
+
+The goal is to build a small, useful, polished project while keeping the scope realistic enough to finish.
+
+No overengineering. No backend too early. No unnecessary complexity.
+
+Just a clean app that does one thing well: tracking meaningful time.
+
+## License
+
+This project is open source and available under the MIT License.

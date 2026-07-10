@@ -7,7 +7,6 @@ import {
 
 import {
     type FormEvent,
-    useEffect,
     useState,
 } from "react";
 
@@ -31,12 +30,6 @@ export default function ProfileSettingsModal({
     const [name, setName] = useState(currentName);
     const [error, setError] = useState("");
 
-    useEffect(() => {
-        if (open) {
-            setName(currentName);
-            setError("");
-        }
-    }, [open, currentName]);
 
     if (!open) {
         return null;

@@ -1,4 +1,7 @@
-import { useState } from "react";
+import {
+    useMemo,
+    useState,
+} from "react";
 
 import AddEventButton from "../components/AddEventButton";
 import AddEventModal from "../components/AddEventModal";
@@ -6,6 +9,8 @@ import AppShell from "../components/AppShell";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import EmptyState from "../components/EmptyState";
 import EventDetailsModal from "../components/EventDetailsModal";
+import EventFilterBar from "../components/EventFilterBar";
+import FilteredEmptyState from "../components/FilteredEmptyState";
 import MemoriesTimeline from "../components/MemoriesTimeline";
 import NamePromptModal from "../components/NamePromptModal";
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
@@ -14,12 +19,24 @@ import UpcomingSection from "../components/UpcomingSection";
 import { useEvents } from "../hooks/useEvents";
 import { useProfile } from "../hooks/useProfile";
 
+import type { ChronicleEvent } from "../types/Event";
+import type { EventFilterState } from "../types/Filters";
+
 import {
     getMemoryEvents,
     getUpcomingEvents,
 } from "../utils/eventFilters";
 
-import type { ChronicleEvent } from "../types/Event";
+import {
+    filterChronicleEvents,
+} from "../utils/eventSearch";
+
+const DEFAULT_FILTERS: EventFilterState = {
+    query: "",
+    view: "all",
+    category: "all",
+    dateRange: "anytime",
+};
 
 export default function Home() {
     const {
@@ -34,6 +51,13 @@ export default function Home() {
         saveProfileName,
         resetProfileName,
     } = useProfile();
+
+    const [
+        filters,
+        setFilters,
+    ] = useState<EventFilterState>(
+        DEFAULT_FILTERS
+    );
 
     const [
         eventFormOpen,
@@ -69,11 +93,35 @@ export default function Home() {
             null
         );
 
-    const upcomingEvents =
+    const totalUpcomingEvents =
         getUpcomingEvents(events);
 
-    const memoryEvents =
+    const totalMemoryEvents =
         getMemoryEvents(events);
+
+    const filteredEvents = useMemo(
+        () =>
+            filterChronicleEvents(
+                events,
+                filters
+            ),
+        [events, filters]
+    );
+
+    const upcomingEvents =
+        getUpcomingEvents(filteredEvents);
+
+    const memoryEvents =
+        getMemoryEvents(filteredEvents);
+
+    const showUpcoming =
+        filters.view !== "memories";
+
+    const showMemories =
+        filters.view !== "upcoming";
+
+    const showingSingleSection =
+        showUpcoming !== showMemories;
 
     const today =
         new Intl.DateTimeFormat("en", {
@@ -82,6 +130,10 @@ export default function Home() {
             day: "numeric",
             year: "numeric",
         }).format(new Date());
+
+    function clearFilters() {
+        setFilters(DEFAULT_FILTERS);
+    }
 
     function openCreateEvent() {
         setEventToEdit(null);
@@ -116,7 +168,7 @@ export default function Home() {
                 setProfileSettingsOpen(true)
             }
         >
-            <section className="mb-12">
+            <section className="mb-10">
                 <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
                     <div>
                         <p className="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-[var(--future)]">
@@ -124,17 +176,18 @@ export default function Home() {
                         </p>
 
                         <h1 className="text-4xl font-bold tracking-tight text-[var(--text-main)] md:text-5xl">
-                            Hello, {profileName || "Curator"}.
+                            Hello,{" "}
+                            {profileName || "Curator"}.
                         </h1>
 
                         <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
                             You have{" "}
                             <span className="font-bold text-[var(--future)]">
-                                {upcomingEvents.length}
+                                {totalUpcomingEvents.length}
                             </span>{" "}
                             upcoming events and{" "}
                             <span className="font-bold text-[var(--memory)]">
-                                {memoryEvents.length}
+                                {totalMemoryEvents.length}
                             </span>{" "}
                             memories in your chronicle.
                         </p>
@@ -159,21 +212,62 @@ export default function Home() {
                 </div>
             </section>
 
-            {events.length > 0 ? (
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                    <UpcomingSection
-                        events={upcomingEvents}
-                        onView={setSelectedEvent}
-                        onDeleteRequest={setEventToDelete}
-                    />
+            {events.length > 0 && (
+                <EventFilterBar
+                    filters={filters}
+                    resultCount={
+                        filteredEvents.length
+                    }
+                    onChange={setFilters}
+                    onClear={clearFilters}
+                />
+            )}
 
-                    <MemoriesTimeline
-                        events={memoryEvents}
-                        onDeleteRequest={setEventToDelete}
-                    />
-                </div>
-            ) : (
+            {events.length === 0 ? (
                 <EmptyState />
+            ) : filteredEvents.length === 0 ? (
+                <FilteredEmptyState
+                    onClear={clearFilters}
+                />
+            ) : (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                    {showUpcoming && (
+                        <div
+                            className={
+                                showingSingleSection
+                                    ? "lg:col-span-12"
+                                    : "contents"
+                            }
+                        >
+                            <UpcomingSection
+                                events={upcomingEvents}
+                                onView={
+                                    setSelectedEvent
+                                }
+                                onDeleteRequest={
+                                    setEventToDelete
+                                }
+                            />
+                        </div>
+                    )}
+
+                    {showMemories && (
+                        <div
+                            className={
+                                showingSingleSection
+                                    ? "lg:col-span-12"
+                                    : "contents"
+                            }
+                        >
+                            <MemoriesTimeline
+                                events={memoryEvents}
+                                onDeleteRequest={
+                                    setEventToDelete
+                                }
+                            />
+                        </div>
+                    )}
+                </div>
             )}
 
             <AddEventButton

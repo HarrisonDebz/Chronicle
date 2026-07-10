@@ -1,5 +1,7 @@
-import { useState } from "react";
-import type { ReactNode } from "react";
+import {
+    type ReactNode,
+    useState,
+} from "react";
 
 import MobileBottomNav from "./MobileBottomNav";
 import MobileHeader from "./MobileHeader";
@@ -7,25 +9,40 @@ import Sidebar from "./Sidebar";
 
 interface Props {
     children: ReactNode;
+    profileName: string;
     onAddEvent: () => void;
+    onOpenProfile: () => void;
 }
 
 export default function AppShell({
     children,
+    profileName,
     onAddEvent,
+    onOpenProfile,
 }: Props) {
-    const [sidebarCollapsed, setSidebarCollapsed] =
-        useState(false);
+    const [
+        sidebarCollapsed,
+        setSidebarCollapsed,
+    ] = useState(false);
 
     return (
         <div className="min-h-screen bg-[var(--background)] text-[var(--text-main)]">
             <Sidebar
                 collapsed={sidebarCollapsed}
-                onToggle={() => setSidebarCollapsed((value) => !value)}
+                profileName={profileName}
+                onToggle={() =>
+                    setSidebarCollapsed(
+                        (value) => !value
+                    )
+                }
                 onAddEvent={onAddEvent}
+                onOpenProfile={onOpenProfile}
             />
 
-            <MobileHeader onAddEvent={onAddEvent} />
+            <MobileHeader
+                onAddEvent={onAddEvent}
+                onOpenProfile={onOpenProfile}
+            />
 
             <main
                 className={`

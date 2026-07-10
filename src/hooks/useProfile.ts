@@ -11,8 +11,13 @@ export function useProfile() {
         setProfileName(name.trim());
     }
 
+    function resetProfileName() {
+        setProfileName("");
+    }
+
     return {
         profileName,
         saveProfileName,
+        resetProfileName,
     };
 }

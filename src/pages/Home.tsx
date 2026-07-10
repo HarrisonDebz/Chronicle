@@ -8,6 +8,7 @@ import EmptyState from "../components/EmptyState";
 import EventDetailsModal from "../components/EventDetailsModal";
 import MemoriesTimeline from "../components/MemoriesTimeline";
 import NamePromptModal from "../components/NamePromptModal";
+import ProfileSettingsModal from "../components/ProfileSettingsModal";
 import UpcomingSection from "../components/UpcomingSection";
 
 import { useEvents } from "../hooks/useEvents";
@@ -31,11 +32,17 @@ export default function Home() {
     const {
         profileName,
         saveProfileName,
+        resetProfileName,
     } = useProfile();
 
     const [
         eventFormOpen,
         setEventFormOpen,
+    ] = useState(false);
+
+    const [
+        profileSettingsOpen,
+        setProfileSettingsOpen,
     ] = useState(false);
 
     const [
@@ -103,7 +110,11 @@ export default function Home() {
 
     return (
         <AppShell
+            profileName={profileName}
             onAddEvent={openCreateEvent}
+            onOpenProfile={() =>
+                setProfileSettingsOpen(true)
+            }
         >
             <section className="mb-12">
                 <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -113,25 +124,19 @@ export default function Home() {
                         </p>
 
                         <h1 className="text-4xl font-bold tracking-tight text-[var(--text-main)] md:text-5xl">
-                            Hello,{" "}
-                            {profileName ||
-                                "Curator"}
-                            .
+                            Hello, {profileName || "Curator"}.
                         </h1>
 
                         <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
                             You have{" "}
                             <span className="font-bold text-[var(--future)]">
-                                {
-                                    upcomingEvents.length
-                                }
+                                {upcomingEvents.length}
                             </span>{" "}
                             upcoming events and{" "}
                             <span className="font-bold text-[var(--memory)]">
                                 {memoryEvents.length}
                             </span>{" "}
-                            memories in your
-                            chronicle.
+                            memories in your chronicle.
                         </p>
                     </div>
 
@@ -158,19 +163,13 @@ export default function Home() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                     <UpcomingSection
                         events={upcomingEvents}
-                        onView={
-                            setSelectedEvent
-                        }
-                        onDeleteRequest={
-                            setEventToDelete
-                        }
+                        onView={setSelectedEvent}
+                        onDeleteRequest={setEventToDelete}
                     />
 
                     <MemoriesTimeline
                         events={memoryEvents}
-                        onDeleteRequest={
-                            setEventToDelete
-                        }
+                        onDeleteRequest={setEventToDelete}
                     />
                 </div>
             ) : (
@@ -208,8 +207,21 @@ export default function Home() {
                 onConfirm={deleteEvent}
             />
 
+            <ProfileSettingsModal
+                open={profileSettingsOpen}
+                currentName={profileName}
+                onClose={() =>
+                    setProfileSettingsOpen(false)
+                }
+                onSave={saveProfileName}
+                onReset={resetProfileName}
+            />
+
             <NamePromptModal
-                open={!profileName}
+                open={
+                    !profileName &&
+                    !profileSettingsOpen
+                }
                 onSave={saveProfileName}
             />
         </AppShell>

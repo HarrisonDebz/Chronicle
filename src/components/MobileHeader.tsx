@@ -1,11 +1,16 @@
-import { Bell, Plus } from "lucide-react";
+import {
+    Plus,
+    UserRound,
+} from "lucide-react";
 
 interface Props {
     onAddEvent: () => void;
+    onOpenProfile: () => void;
 }
 
 export default function MobileHeader({
     onAddEvent,
+    onOpenProfile,
 }: Props) {
     return (
         <header
@@ -39,20 +44,25 @@ export default function MobileHeader({
 
             <div className="flex items-center gap-3">
                 <button
+                    type="button"
+                    onClick={onOpenProfile}
                     className="
             rounded-full
+            border
+            border-[var(--border-soft)]
+            bg-[var(--surface-card)]
             p-2
-            text-[var(--text-muted)]
+            text-[var(--primary)]
             transition
-            hover:bg-[var(--surface-card-high)]
-            hover:text-[var(--primary)]
+            active:scale-95
           "
-                    aria-label="Notifications"
+                    aria-label="Open profile settings"
                 >
-                    <Bell size={20} />
+                    <UserRound size={20} />
                 </button>
 
                 <button
+                    type="button"
                     onClick={onAddEvent}
                     className="
             rounded-full

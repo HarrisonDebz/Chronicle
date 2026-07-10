@@ -13,6 +13,7 @@ import EventDetailsModal from "../components/EventDetailsModal";
 import EventFilterBar from "../components/EventFilterBar";
 import FilteredEmptyState from "../components/FilteredEmptyState";
 import JourneyView from "../components/JourneyView";
+import StatisticsView from "../components/StatisticsView";
 import MemoriesTimeline from "../components/MemoriesTimeline";
 import NamePromptModal from "../components/NamePromptModal";
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
@@ -306,11 +307,13 @@ export default function Home() {
                     selectedDay={selectedCalendarDay}
                     onSelectDay={setSelectedCalendarDay}
                 />
-            ) : (
+            ) : activeView === "journey" ? (
                 <JourneyView
                     events={events}
                     onView={setSelectedEvent}
                 />
+            ) : (
+                <StatisticsView events={events} />
             )}
 
             <AddEventButton

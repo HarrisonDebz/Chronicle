@@ -37,8 +37,8 @@ const navItems = [
     {
         label: "Stats",
         icon: BarChart3,
-        view: null,
-        disabled: true,
+        view: "statistics" as AppView,
+        disabled: false,
     },
 ];
 

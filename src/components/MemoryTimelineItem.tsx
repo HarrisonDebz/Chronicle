@@ -121,17 +121,18 @@ export default function MemoryTimelineItem({
                     type="button"
                     onClick={() => onDeleteRequest(event)}
                     className="
-            mt-3
-            inline-flex
-            items-center
-            gap-1.5
-            text-xs
-            font-bold
-            text-red-300
-            opacity-0
-            transition
-            group-hover:opacity-100
-          "
+                    mt-3
+                    inline-flex
+                    items-center
+                    gap-1.5
+                    text-xs
+                    font-bold
+                    text-red-300
+                    opacity-100
+                    transition
+                    md:opacity-0
+                    md:group-hover:opacity-100
+                "
                 >
                     <Trash2 size={13} />
                     Delete

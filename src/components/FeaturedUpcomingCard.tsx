@@ -48,24 +48,28 @@ export default function FeaturedUpcomingCard({
         >
             <div
                 className="
-          absolute
-          right-6
-          top-6
-          rounded-full
-          border
-          border-orange-300/30
-          bg-orange-400/10
-          px-4
-          py-1.5
-          text-xs
-          font-bold
-          text-[var(--future)]
-        "
+                mb-4
+                inline-flex
+                w-fit
+                rounded-full
+                border
+                border-orange-300/30
+                bg-orange-400/10
+                px-4
+                py-1.5
+                text-xs
+                font-bold
+                text-[var(--future)]
+                md:absolute
+                md:right-6
+                md:top-6
+                md:mb-0
+                "
             >
                 {getDaysLeftLabel(event.date)}
             </div>
 
-            <div className="relative z-10 max-w-xl">
+            <div className="relative z-10 max-w-xl md:pr-40">
                 <span
                     className="
             mb-2

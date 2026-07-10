@@ -1,6 +1,5 @@
 import { useLocalStorage } from "./useLocalStorage";
 import type { ChronicleEvent } from "../types/Event";
-import { demoEvents } from "../data/demoEvents";
 import { v4 as uuid } from "uuid";
 
 
@@ -9,7 +8,7 @@ export function useEvents() {
     const [events, setEvents] =
         useLocalStorage<ChronicleEvent[]>(
             "chronicle-events",
-            demoEvents
+            []
         );
 
 

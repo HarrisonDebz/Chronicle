@@ -2,8 +2,6 @@ import {
     useMemo,
     useState,
 } from "react";
-
-import AddEventButton from "../components/AddEventButton";
 import AddEventModal from "../components/AddEventModal";
 import AppShell from "../components/AppShell";
 import CalendarView from "../components/CalendarView";
@@ -321,10 +319,6 @@ export default function Home() {
                     onView={setSelectedEvent}
                 />
             )}
-
-            <AddEventButton
-                onClick={openCreateEvent}
-            />
 
             <EventDetailsModal
                 event={selectedEvent}

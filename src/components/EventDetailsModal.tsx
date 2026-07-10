@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 import {
     CalendarClock,
@@ -41,81 +41,85 @@ export default function EventDetailsModal({
     onEdit,
     onDeleteRequest,
 }: Props) {
-    if (!event) {
-        return null;
-    }
-
-    const category =
-        getCategoryInfo(event.category);
-
-    const Icon = category.icon;
-
-    const completed =
-        isCompletedEvent(event);
+    const category = event ? getCategoryInfo(event.category) : null;
+    const Icon = category?.icon;
+    const completed = event ? isCompletedEvent(event) : false;
 
     return (
-        <div
-            className="
-        fixed
-        inset-0
-        z-[105]
-        flex
-        items-center
-        justify-center
-        bg-[rgba(6,14,32,0.84)]
-        px-4
-        py-8
-        backdrop-blur-md
-      "
-        >
-            <motion.article
-                initial={{
-                    opacity: 0,
-                    scale: 0.96,
-                    y: 20,
-                }}
-                animate={{
-                    opacity: 1,
-                    scale: 1,
-                    y: 0,
-                }}
-                className="
-          glass-card
-          w-full
-          max-w-xl
-          overflow-hidden
-          rounded-2xl
-          shadow-2xl
-        "
-            >
-                <header
+        <AnimatePresence>
+            {event && category && Icon && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     className="
-            border-b
-            border-[var(--border-soft)]
-            bg-gradient-to-r
-            from-[var(--surface-card-high)]
-            to-[var(--surface-card)]
-            p-6
-          "
+                        fixed
+                        inset-0
+                        z-[105]
+                        flex
+                        items-center
+                        justify-center
+                        bg-[rgba(6,14,32,0.84)]
+                        px-4
+                        py-8
+                        backdrop-blur-md
+                    "
                 >
-                    <div className="flex items-start gap-4">
-                        <div
-                            className={`
-                flex
-                h-12
-                w-12
-                shrink-0
-                items-center
-                justify-center
-                rounded-xl
-                ${completed
-                                    ? "bg-emerald-400/10 text-[var(--memory)]"
-                                    : "bg-orange-400/10 text-[var(--future)]"
-                                }
-              `}
+                    <motion.article
+                        role="dialog"
+                        aria-modal="true"
+                        initial={{
+                            opacity: 0,
+                            scale: 0.96,
+                            y: 20,
+                        }}
+                        animate={{
+                            opacity: 1,
+                            scale: 1,
+                            y: 0,
+                        }}
+                        exit={{
+                            opacity: 0,
+                            scale: 0.96,
+                            y: 20,
+                        }}
+                        className="
+                glass-card
+                w-full
+                max-w-xl
+                overflow-hidden
+                rounded-2xl
+                shadow-2xl
+                "
+                    >
+                        <header
+                            className="
+                    border-b
+                    border-[var(--border-soft)]
+                    bg-gradient-to-r
+                    from-[var(--surface-card-high)]
+                    to-[var(--surface-card)]
+                    p-6
+                "
                         >
-                            <Icon size={25} />
-                        </div>
+                            <div className="flex items-start gap-4">
+                                <div
+                                    className={`
+                        flex
+                        h-12
+                        w-12
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-xl
+                        ${completed
+                                            ? "bg-emerald-400/10 text-[var(--memory)]"
+                                            : "bg-orange-400/10 text-[var(--future)]"
+                                        }
+                    `}
+                                >
+                                    <Icon size={25} />
+                                </div>
 
                         <div className="min-w-0 flex-1">
                             <span
@@ -315,7 +319,9 @@ export default function EventDetailsModal({
                         </button>
                     </div>
                 </div>
-            </motion.article>
-        </div>
+                </motion.article>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 }

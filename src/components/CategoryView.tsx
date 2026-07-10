@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 import { Tags } from "lucide-react";
 
@@ -514,23 +515,35 @@ export default function CategoryView({
                     <SummaryBar events={events} />
 
                     {/* Category grid */}
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <motion.div 
+                        initial="hidden"
+                        animate="show"
+                        variants={{
+                            hidden: { opacity: 0 },
+                            show: {
+                                opacity: 1,
+                                transition: { staggerChildren: 0.1 }
+                            }
+                        }}
+                        className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                    >
                         {byCategory.map(
                             ({ category, events: evs }) => (
-                                <CategoryCard
-                                    key={category}
-                                    category={category}
-                                    events={evs}
-                                    active={
-                                        activeCategory ===
-                                        category
-                                    }
-                                    onSelect={toggleCategory}
-                                    onView={onView}
-                                />
+                                <motion.div key={category} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}>
+                                    <CategoryCard
+                                        category={category}
+                                        events={evs}
+                                        active={
+                                            activeCategory ===
+                                            category
+                                        }
+                                        onSelect={toggleCategory}
+                                        onView={onView}
+                                    />
+                                </motion.div>
                             )
                         )}
-                    </div>
+                    </motion.div>
                 </div>
             )}
         </section>

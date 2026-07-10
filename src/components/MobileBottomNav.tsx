@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import {
     BarChart3,
     CalendarDays,
@@ -68,6 +69,7 @@ export default function MobileBottomNav({
         bg-[var(--surface-low)]
         px-2
         py-2
+        pb-[env(safe-area-inset-bottom)]
         md:hidden
       "
         >
@@ -97,14 +99,14 @@ export default function MobileBottomNav({
               items-center
               justify-center
               rounded-xl
-              px-1
-              py-1.5
+              px-2
+              py-3
               text-[10px]
               font-semibold
               transition
               ${active
-                                ? "bg-[var(--primary-strong)] text-white"
-                                : "text-[var(--text-muted)]"
+                                ? "text-[var(--primary)]"
+                                : "text-[var(--text-muted)] hover:text-[var(--text-soft)]"
                             }
               ${item.disabled
                                 ? "cursor-not-allowed opacity-65"
@@ -112,9 +114,17 @@ export default function MobileBottomNav({
                             }
             `}
                     >
-                        <Icon size={18} />
-
-                        <span>{item.label}</span>
+                        {active && (
+                            <motion.div
+                                layoutId="mobileNavActiveBg"
+                                className="absolute inset-0 rounded-xl bg-[rgba(192,193,255,0.1)]"
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            />
+                        )}
+                        <span className="relative z-10 flex flex-col items-center gap-1">
+                            <Icon size={20} />
+                            <span>{item.label}</span>
+                        </span>
 
                         {item.disabled && (
                             <span

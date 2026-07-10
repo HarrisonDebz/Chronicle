@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import {
     CalendarClock,
     Trash2,
@@ -42,7 +43,9 @@ export default function FeaturedUpcomingCard({
     const progress = getProgress(event);
 
     return (
-        <article
+        <motion.article
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
             className="
         future-glow
         glass-card
@@ -209,6 +212,6 @@ export default function FeaturedUpcomingCard({
           blur-[90px]
         "
             />
-        </article>
+        </motion.article>
     );
 }

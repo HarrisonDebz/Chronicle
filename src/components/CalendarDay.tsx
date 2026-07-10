@@ -43,6 +43,7 @@ export default function CalendarDay({
     return (
         <button
             type="button"
+            aria-label={`Select date ${format(day, "MMMM d, yyyy")}. ${events.length} events`}
             onClick={() => onSelect(day)}
             className={`
         relative

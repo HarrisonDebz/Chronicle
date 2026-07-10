@@ -1,6 +1,7 @@
 import {
     useMemo,
     useState,
+    useEffect
 } from "react";
 import AddEventModal from "../components/AddEventModal";
 import AppShell from "../components/AppShell";
@@ -20,6 +21,8 @@ import UpcomingSection from "../components/UpcomingSection";
 
 import { useEvents } from "../hooks/useEvents";
 import { useProfile } from "../hooks/useProfile";
+import { useToast } from "../hooks/useToast";
+import { useNotifications } from "../hooks/useNotifications";
 
 import type { ChronicleEvent } from "../types/Event";
 import type { EventFilterState } from "../types/Filters";
@@ -55,6 +58,9 @@ export default function Home() {
         resetProfileName,
     } = useProfile();
 
+    const { addToast } = useToast();
+    const { sendNotification, permission } = useNotifications();
+
     const [activeView, setActiveView] =
         useState<AppView>("dashboard");
 
@@ -62,6 +68,37 @@ export default function Home() {
         selectedCalendarDay,
         setSelectedCalendarDay,
     ] = useState<Date>(new Date());
+
+    const [notifiedEventIds, setNotifiedEventIds] = useState<Set<string>>(new Set());
+
+    // Notification check interval
+    useEffect(() => {
+        if (permission !== 'granted' || events.length === 0) return;
+
+        const checkUpcomingEvents = () => {
+            const now = new Date();
+
+            events.forEach(event => {
+                if (notifiedEventIds.has(event.id)) return;
+
+                const eventDate = new Date(event.date);
+                const timeDiff = eventDate.getTime() - now.getTime();
+
+                // If it's a countdown and starts within 24h but is still in the future
+                if (event.type === 'countdown' && timeDiff > 0 && timeDiff <= 24 * 60 * 60 * 1000) {
+                    sendNotification(`Upcoming: ${event.title}`, {
+                        body: `Starts in less than 24 hours.`,
+                    });
+                    setNotifiedEventIds(prev => new Set(prev).add(event.id));
+                }
+            });
+        };
+
+        checkUpcomingEvents();
+        const intervalId = setInterval(checkUpcomingEvents, 60 * 60 * 1000); // Check every hour
+
+        return () => clearInterval(intervalId);
+    }, [events, permission, notifiedEventIds, sendNotification]);
 
 
     const [filters, setFilters] =
@@ -335,8 +372,14 @@ export default function Home() {
                 open={eventFormOpen}
                 eventToEdit={eventToEdit}
                 onClose={closeEventForm}
-                onCreate={addEvent}
-                onUpdate={updateEvent}
+                onCreate={(eventInput) => {
+                    addEvent(eventInput);
+                    addToast(`Successfully created "${eventInput.title}"!`, 'success');
+                }}
+                onUpdate={(eventInput) => {
+                    updateEvent(eventInput);
+                    addToast(`Updated "${eventInput.title}"`, 'success');
+                }}
                 onBrowseCategories={() => {
                     closeEventForm();
                     setActiveView("categories");

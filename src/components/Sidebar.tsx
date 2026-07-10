@@ -150,6 +150,7 @@ export default function Sidebar({
                             key={item.label}
                             type="button"
                             disabled={item.disabled}
+                            aria-label={item.label}
                             onClick={() => {
                                 if (item.view) {
                                     onViewChange(
@@ -219,6 +220,7 @@ export default function Sidebar({
                 <button
                     type="button"
                     onClick={onAddEvent}
+                    aria-label="Add Event"
                     className={`
             flex
             w-full
@@ -251,6 +253,7 @@ export default function Sidebar({
                 <button
                     type="button"
                     onClick={onOpenProfile}
+                    aria-label="Profile Settings"
                     className={`
             flex
             w-full

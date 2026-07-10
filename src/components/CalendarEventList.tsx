@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import {
     CalendarClock,
     CheckCircle2,
@@ -89,7 +90,20 @@ export default function CalendarEventList({
                     </p>
                 </div>
             ) : (
-                <div className="space-y-3">
+                <motion.div 
+                    initial="hidden"
+                    animate="show"
+                    variants={{
+                        hidden: { opacity: 0 },
+                        show: {
+                            opacity: 1,
+                            transition: {
+                                staggerChildren: 0.05
+                            }
+                        }
+                    }}
+                    className="space-y-3"
+                >
                     {events.map((event) => {
                         const completed =
                             isCompletedEvent(event);
@@ -102,8 +116,12 @@ export default function CalendarEventList({
                         const Icon = category.icon;
 
                         return (
-                            <button
+                            <motion.button
                                 key={event.id}
+                                variants={{
+                                    hidden: { opacity: 0, y: 10 },
+                                    show: { opacity: 1, y: 0 }
+                                }}
                                 type="button"
                                 onClick={() =>
                                     onView(event)
@@ -173,10 +191,10 @@ export default function CalendarEventList({
                                         />
                                     )}
                                 </div>
-                            </button>
+                            </motion.button>
                         );
                     })}
-                </div>
+                </motion.div>
             )}
         </aside>
     );

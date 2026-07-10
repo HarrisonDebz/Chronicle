@@ -12,6 +12,7 @@ import EmptyState from "../components/EmptyState";
 import EventDetailsModal from "../components/EventDetailsModal";
 import EventFilterBar from "../components/EventFilterBar";
 import FilteredEmptyState from "../components/FilteredEmptyState";
+import JourneyView from "../components/JourneyView";
 import MemoriesTimeline from "../components/MemoriesTimeline";
 import NamePromptModal from "../components/NamePromptModal";
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
@@ -61,6 +62,7 @@ export default function Home() {
         selectedCalendarDay,
         setSelectedCalendarDay,
     ] = useState<Date>(new Date());
+
 
     const [filters, setFilters] =
         useState<EventFilterState>(
@@ -297,12 +299,17 @@ export default function Home() {
                         </div>
                     )}
                 </>
-            ) : (
+            ) : activeView === "calendar" ? (
                 <CalendarView
                     events={events}
                     onView={setSelectedEvent}
                     selectedDay={selectedCalendarDay}
                     onSelectDay={setSelectedCalendarDay}
+                />
+            ) : (
+                <JourneyView
+                    events={events}
+                    onView={setSelectedEvent}
                 />
             )}
 

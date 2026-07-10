@@ -31,8 +31,8 @@ const navItems = [
     {
         label: "Journey",
         icon: TimerReset,
-        view: null,
-        disabled: true,
+        view: "journey" as AppView,
+        disabled: false,
     },
     {
         label: "Stats",

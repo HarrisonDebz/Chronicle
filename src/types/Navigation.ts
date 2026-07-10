@@ -1,3 +1,4 @@
 export type AppView =
     | "dashboard"
-    | "calendar";
+    | "calendar"
+    | "journey";

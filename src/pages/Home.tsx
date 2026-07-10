@@ -7,6 +7,7 @@ import AddEventButton from "../components/AddEventButton";
 import AddEventModal from "../components/AddEventModal";
 import AppShell from "../components/AppShell";
 import CalendarView from "../components/CalendarView";
+import CategoryView from "../components/CategoryView";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import EmptyState from "../components/EmptyState";
 import EventDetailsModal from "../components/EventDetailsModal";
@@ -312,8 +313,13 @@ export default function Home() {
                     events={events}
                     onView={setSelectedEvent}
                 />
-            ) : (
+            ) : activeView === "statistics" ? (
                 <StatisticsView events={events} />
+            ) : (
+                <CategoryView
+                    events={events}
+                    onView={setSelectedEvent}
+                />
             )}
 
             <AddEventButton

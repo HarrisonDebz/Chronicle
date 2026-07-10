@@ -2,6 +2,7 @@ import {
     BarChart3,
     CalendarDays,
     LayoutDashboard,
+    Tags,
     TimerReset,
 } from "lucide-react";
 
@@ -38,6 +39,12 @@ const navItems = [
         label: "Stats",
         icon: BarChart3,
         view: "statistics" as AppView,
+        disabled: false,
+    },
+    {
+        label: "Categories",
+        icon: Tags,
+        view: "categories" as AppView,
         disabled: false,
     },
 ];

@@ -55,8 +55,8 @@ const navItems = [
     {
         label: "Categories",
         icon: Tags,
-        view: null,
-        disabled: true,
+        view: "categories" as AppView,
+        disabled: false,
     },
 ];
 

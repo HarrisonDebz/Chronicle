@@ -25,3 +25,8 @@ export interface ChronicleEvent {
 
     createdAt: string;
 }
+
+export type ChronicleEventInput = Omit<
+    ChronicleEvent,
+    "id" | "createdAt"
+>;

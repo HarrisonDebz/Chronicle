@@ -1,17 +1,32 @@
-import { CalendarDays, ChevronDown, PlusCircle } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import {
+    CalendarDays,
+    ChevronDown,
+    PlusCircle,
+    Save,
+} from "lucide-react";
+
+import {
+    type FormEvent,
+    useState,
+} from "react";
 
 import type {
     ChronicleEvent,
+    ChronicleEventInput,
     EventCategory,
     EventType,
 } from "../types/Event";
 
 interface Props {
+    initialEvent?: ChronicleEvent | null;
+
     onSubmit: (
-        event: Omit<ChronicleEvent, "id" | "createdAt">
+        event: ChronicleEventInput
     ) => void;
+
     onCancel: () => void;
+
+    submitLabel?: string;
 }
 
 const categories: {
@@ -28,20 +43,59 @@ const categories: {
         { label: "Other", value: "other" },
     ];
 
+function getDateTimeInputValue(
+    date?: string
+) {
+    if (!date) {
+        return "";
+    }
+
+    if (date.length === 10) {
+        return `${date}T00:00`;
+    }
+
+    return date.slice(0, 16);
+}
+
 export default function EventForm({
+    initialEvent = null,
     onSubmit,
     onCancel,
+    submitLabel = "Add Event",
 }: Props) {
-    const [title, setTitle] = useState("");
-    const [date, setDate] = useState("");
+    const isEditing = Boolean(initialEvent);
+
+    const [title, setTitle] = useState(
+        initialEvent?.title ?? ""
+    );
+
+    const [description, setDescription] =
+        useState(
+            initialEvent?.description ?? ""
+        );
+
+    const [date, setDate] = useState(
+        getDateTimeInputValue(
+            initialEvent?.date
+        )
+    );
+
     const [type, setType] =
-        useState<EventType>("countdown");
+        useState<EventType>(
+            initialEvent?.type ?? "countdown"
+        );
+
     const [category, setCategory] =
-        useState<EventCategory | "">("");
+        useState<EventCategory | "">(
+            initialEvent?.category ?? ""
+        );
+
     const [error, setError] = useState("");
 
-    function handleSubmit(e: FormEvent) {
-        e.preventDefault();
+    function handleSubmit(
+        event: FormEvent
+    ) {
+        event.preventDefault();
 
         if (!title.trim()) {
             setError("Event title is required.");
@@ -49,34 +103,38 @@ export default function EventForm({
         }
 
         if (!category) {
-            setError("Please select a category.");
+            setError(
+                "Please select a category."
+            );
             return;
         }
 
         if (!date) {
-            setError("Date and time are required.");
+            setError(
+                "Date and time are required."
+            );
             return;
         }
 
         onSubmit({
             title: title.trim(),
+
+            description:
+                description.trim() || undefined,
+
             date,
             type,
             category,
-            recurring: false,
-        });
 
-        setTitle("");
-        setDate("");
-        setType("countdown");
-        setCategory("");
-        setError("");
+            recurring:
+                initialEvent?.recurring ?? false,
+        });
     }
 
     return (
         <form
             onSubmit={handleSubmit}
-            className="space-y-5 p-5 md:p-6"
+            className="space-y-4 p-4 sm:p-5 md:p-6"
         >
             {error && (
                 <div
@@ -96,7 +154,7 @@ export default function EventForm({
                 </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-2">
                 <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
                     Event Type
                 </label>
@@ -106,8 +164,12 @@ export default function EventForm({
                         <input
                             type="radio"
                             name="event-type"
-                            checked={type === "countdown"}
-                            onChange={() => setType("countdown")}
+                            checked={
+                                type === "countdown"
+                            }
+                            onChange={() =>
+                                setType("countdown")
+                            }
                             className="peer sr-only"
                         />
 
@@ -118,7 +180,7 @@ export default function EventForm({
                 border
                 border-[var(--border-strong)]
                 bg-[var(--surface-low)]
-                p-4
+                p-3
                 text-center
                 font-semibold
                 transition
@@ -126,6 +188,7 @@ export default function EventForm({
                 peer-checked:border-[var(--primary)]
                 peer-checked:bg-[rgba(192,193,255,0.12)]
                 peer-checked:text-[var(--primary)]
+                sm:p-4
               "
                         >
                             Countdown
@@ -136,8 +199,12 @@ export default function EventForm({
                         <input
                             type="radio"
                             name="event-type"
-                            checked={type === "countup"}
-                            onChange={() => setType("countup")}
+                            checked={
+                                type === "countup"
+                            }
+                            onChange={() =>
+                                setType("countup")
+                            }
                             className="peer sr-only"
                         />
 
@@ -148,7 +215,7 @@ export default function EventForm({
                 border
                 border-[var(--border-strong)]
                 bg-[var(--surface-low)]
-                p-4
+                p-3
                 text-center
                 font-semibold
                 transition
@@ -156,6 +223,7 @@ export default function EventForm({
                 peer-checked:border-[var(--primary)]
                 peer-checked:bg-[rgba(192,193,255,0.12)]
                 peer-checked:text-[var(--primary)]
+                sm:p-4
               "
                         >
                             Count Up
@@ -164,15 +232,17 @@ export default function EventForm({
                 </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
                 <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
                     Event Title
                 </label>
 
                 <input
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Graduation, First GitHub commit"
+                    onChange={(event) =>
+                        setTitle(event.target.value)
+                    }
+                    placeholder="e.g. Graduation"
                     className="
             w-full
             rounded-xl
@@ -193,8 +263,41 @@ export default function EventForm({
                 />
             </div>
 
+            <div className="space-y-2">
+                <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                    Description
+                </label>
+
+                <textarea
+                    value={description}
+                    onChange={(event) =>
+                        setDescription(
+                            event.target.value
+                        )
+                    }
+                    placeholder="Optional note about this event"
+                    rows={2}
+                    className="
+            w-full
+            resize-none
+            rounded-xl
+            border
+            border-[var(--border-strong)]
+            bg-[var(--surface-low)]
+            p-4
+            text-[var(--text-main)]
+            outline-none
+            transition
+            placeholder:text-[rgba(199,196,215,0.32)]
+            focus:border-[var(--primary)]
+            focus:ring-2
+            focus:ring-[rgba(192,193,255,0.24)]
+          "
+                />
+            </div>
+
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-3">
+                <div className="space-y-2">
                     <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
                         Category
                     </label>
@@ -202,8 +305,11 @@ export default function EventForm({
                     <div className="relative">
                         <select
                             value={category}
-                            onChange={(e) =>
-                                setCategory(e.target.value as EventCategory)
+                            onChange={(event) =>
+                                setCategory(
+                                    event.target
+                                        .value as EventCategory
+                                )
                             }
                             className="
                 w-full
@@ -221,18 +327,23 @@ export default function EventForm({
                 focus:ring-[rgba(192,193,255,0.24)]
               "
                         >
-                            <option value="" disabled>
+                            <option
+                                value=""
+                                disabled
+                            >
                                 Select category
                             </option>
 
-                            {categories.map((item) => (
-                                <option
-                                    key={item.value}
-                                    value={item.value}
-                                >
-                                    {item.label}
-                                </option>
-                            ))}
+                            {categories.map(
+                                (item) => (
+                                    <option
+                                        key={item.value}
+                                        value={item.value}
+                                    >
+                                        {item.label}
+                                    </option>
+                                )
+                            )}
                         </select>
 
                         <ChevronDown
@@ -249,7 +360,7 @@ export default function EventForm({
                     </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                     <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
                         Date & Time
                     </label>
@@ -258,7 +369,11 @@ export default function EventForm({
                         <input
                             type="datetime-local"
                             value={date}
-                            onChange={(e) => setDate(e.target.value)}
+                            onChange={(event) =>
+                                setDate(
+                                    event.target.value
+                                )
+                            }
                             className="
                 w-full
                 rounded-xl
@@ -292,7 +407,7 @@ export default function EventForm({
                 </div>
             </div>
 
-            <div className="flex flex-col items-center justify-end gap-3 pt-2 md:flex-row">
+            <div className="flex flex-col items-center justify-end gap-3 pt-2 sm:flex-row">
                 <button
                     type="button"
                     onClick={onCancel}
@@ -305,10 +420,10 @@ export default function EventForm({
             text-[var(--text-muted)]
             transition
             hover:bg-[var(--surface-card-high)]
-            md:w-auto
+            sm:w-auto
           "
                 >
-                    Discard
+                    Cancel
                 </button>
 
                 <button
@@ -325,17 +440,20 @@ export default function EventForm({
             px-8
             py-3
             font-bold
-            uppercase
-            tracking-wide
             text-[#2a1000]
             transition
             hover:brightness-110
             active:scale-95
-            md:w-auto
+            sm:w-auto
           "
                 >
-                    <PlusCircle size={19} />
-                    Add Event
+                    {isEditing ? (
+                        <Save size={19} />
+                    ) : (
+                        <PlusCircle size={19} />
+                    )}
+
+                    {submitLabel}
                 </button>
             </div>
         </form>

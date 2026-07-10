@@ -1,51 +1,54 @@
-import { useLocalStorage } from "./useLocalStorage";
-import type { ChronicleEvent } from "../types/Event";
 import { v4 as uuid } from "uuid";
 
+import type {
+    ChronicleEvent,
+    ChronicleEventInput,
+} from "../types/Event";
+
+import { useLocalStorage } from "./useLocalStorage";
 
 export function useEvents() {
-
     const [events, setEvents] =
         useLocalStorage<ChronicleEvent[]>(
             "chronicle-events",
             []
         );
 
-
-    function addEvent(
-        event: Omit<ChronicleEvent, "id" | "createdAt">
-    ) {
-
+    function addEvent(event: ChronicleEventInput) {
         const newEvent: ChronicleEvent = {
             ...event,
             id: uuid(),
             createdAt: new Date().toISOString(),
         };
 
-
-        setEvents([
-            ...events,
+        setEvents((currentEvents) => [
+            ...currentEvents,
             newEvent,
         ]);
-
     }
 
-
-    function deleteEvent(id: string) {
-
-        setEvents(
-            events.filter(
-                event => event.id !== id
+    function updateEvent(updatedEvent: ChronicleEvent) {
+        setEvents((currentEvents) =>
+            currentEvents.map((event) =>
+                event.id === updatedEvent.id
+                    ? updatedEvent
+                    : event
             )
         );
-
     }
 
+    function deleteEvent(id: string) {
+        setEvents((currentEvents) =>
+            currentEvents.filter(
+                (event) => event.id !== id
+            )
+        );
+    }
 
     return {
         events,
         addEvent,
+        updateEvent,
         deleteEvent,
     };
-
 }

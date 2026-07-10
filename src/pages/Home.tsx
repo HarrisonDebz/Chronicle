@@ -5,6 +5,7 @@ import AddEventModal from "../components/AddEventModal";
 import AppShell from "../components/AppShell";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import EmptyState from "../components/EmptyState";
+import EventDetailsModal from "../components/EventDetailsModal";
 import MemoriesTimeline from "../components/MemoriesTimeline";
 import NamePromptModal from "../components/NamePromptModal";
 import UpcomingSection from "../components/UpcomingSection";
@@ -23,6 +24,7 @@ export default function Home() {
     const {
         events,
         addEvent,
+        updateEvent,
         deleteEvent,
     } = useEvents();
 
@@ -31,24 +33,78 @@ export default function Home() {
         saveProfileName,
     } = useProfile();
 
-    const [open, setOpen] = useState(false);
+    const [
+        eventFormOpen,
+        setEventFormOpen,
+    ] = useState(false);
 
-    const [eventToDelete, setEventToDelete] =
-        useState<ChronicleEvent | null>(null);
+    const [
+        selectedEvent,
+        setSelectedEvent,
+    ] =
+        useState<ChronicleEvent | null>(
+            null
+        );
 
-    const upcomingEvents = getUpcomingEvents(events);
+    const [
+        eventToEdit,
+        setEventToEdit,
+    ] =
+        useState<ChronicleEvent | null>(
+            null
+        );
 
-    const memoryEvents = getMemoryEvents(events);
+    const [
+        eventToDelete,
+        setEventToDelete,
+    ] =
+        useState<ChronicleEvent | null>(
+            null
+        );
 
-    const today = new Intl.DateTimeFormat("en", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-    }).format(new Date());
+    const upcomingEvents =
+        getUpcomingEvents(events);
+
+    const memoryEvents =
+        getMemoryEvents(events);
+
+    const today =
+        new Intl.DateTimeFormat("en", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+        }).format(new Date());
+
+    function openCreateEvent() {
+        setEventToEdit(null);
+        setEventFormOpen(true);
+    }
+
+    function openEditEvent(
+        event: ChronicleEvent
+    ) {
+        setSelectedEvent(null);
+        setEventToEdit(event);
+        setEventFormOpen(true);
+    }
+
+    function closeEventForm() {
+        setEventFormOpen(false);
+        setEventToEdit(null);
+    }
+
+    function requestDeleteFromDetails(
+        event: ChronicleEvent
+    ) {
+        setSelectedEvent(null);
+        setEventToDelete(event);
+    }
 
     return (
-        <AppShell onAddEvent={() => setOpen(true)}>
+        <AppShell
+            onAddEvent={openCreateEvent}
+        >
             <section className="mb-12">
                 <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
                     <div>
@@ -57,19 +113,25 @@ export default function Home() {
                         </p>
 
                         <h1 className="text-4xl font-bold tracking-tight text-[var(--text-main)] md:text-5xl">
-                            Hello, {profileName || "Curator"}.
+                            Hello,{" "}
+                            {profileName ||
+                                "Curator"}
+                            .
                         </h1>
 
                         <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
                             You have{" "}
                             <span className="font-bold text-[var(--future)]">
-                                {upcomingEvents.length}
+                                {
+                                    upcomingEvents.length
+                                }
                             </span>{" "}
                             upcoming events and{" "}
                             <span className="font-bold text-[var(--memory)]">
                                 {memoryEvents.length}
                             </span>{" "}
-                            memories in your chronicle.
+                            memories in your
+                            chronicle.
                         </p>
                     </div>
 
@@ -96,12 +158,19 @@ export default function Home() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                     <UpcomingSection
                         events={upcomingEvents}
-                        onDeleteRequest={setEventToDelete}
+                        onView={
+                            setSelectedEvent
+                        }
+                        onDeleteRequest={
+                            setEventToDelete
+                        }
                     />
 
                     <MemoriesTimeline
                         events={memoryEvents}
-                        onDeleteRequest={setEventToDelete}
+                        onDeleteRequest={
+                            setEventToDelete
+                        }
                     />
                 </div>
             ) : (
@@ -109,18 +178,33 @@ export default function Home() {
             )}
 
             <AddEventButton
-                onClick={() => setOpen(true)}
+                onClick={openCreateEvent}
+            />
+
+            <EventDetailsModal
+                event={selectedEvent}
+                onClose={() =>
+                    setSelectedEvent(null)
+                }
+                onEdit={openEditEvent}
+                onDeleteRequest={
+                    requestDeleteFromDetails
+                }
             />
 
             <AddEventModal
-                open={open}
-                onClose={() => setOpen(false)}
-                onSubmit={addEvent}
+                open={eventFormOpen}
+                eventToEdit={eventToEdit}
+                onClose={closeEventForm}
+                onCreate={addEvent}
+                onUpdate={updateEvent}
             />
 
             <DeleteConfirmModal
                 event={eventToDelete}
-                onClose={() => setEventToDelete(null)}
+                onClose={() =>
+                    setEventToDelete(null)
+                }
                 onConfirm={deleteEvent}
             />
 

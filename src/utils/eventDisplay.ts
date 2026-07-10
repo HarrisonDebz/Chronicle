@@ -32,3 +32,12 @@ export function getDaysLeftLabel(date: string) {
 
     return `${days} Days Remaining`;
 }
+
+export function formatEventDateTime(
+    date: string
+) {
+    return format(
+        parseISO(date),
+        "MMM dd, yyyy 'at' HH:mm"
+    );
+}

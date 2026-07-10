@@ -20,11 +20,19 @@ import {
 
 interface Props {
     event: ChronicleEvent;
-    onDeleteRequest: (event: ChronicleEvent) => void;
+
+    onView: (
+        event: ChronicleEvent
+    ) => void;
+
+    onDeleteRequest: (
+        event: ChronicleEvent
+    ) => void;
 }
 
 export default function FeaturedUpcomingCard({
     event,
+    onView,
     onDeleteRequest,
 }: Props) {
     const category = getCategoryInfo(event.category);
@@ -139,17 +147,18 @@ export default function FeaturedUpcomingCard({
                 <div className="flex flex-wrap gap-3">
                     <button
                         type="button"
+                        onClick={() => onView(event)}
                         className="
-              rounded-xl
-              bg-[var(--future)]
-              px-8
-              py-3
-              font-bold
-              text-[#2a1000]
-              transition
-              hover:brightness-110
-              active:scale-95
-            "
+                            rounded-xl
+                            bg-[var(--future)]
+                            px-8
+                            py-3
+                            font-bold
+                            text-[#2a1000]
+                            transition
+                            hover:brightness-110
+                            active:scale-95
+                        "
                     >
                         View Event
                     </button>

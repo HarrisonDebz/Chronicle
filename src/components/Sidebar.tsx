@@ -1,5 +1,6 @@
 import {
     BarChart3,
+    CalendarDays,
     ChevronLeft,
     ChevronRight,
     LayoutDashboard,
@@ -12,37 +13,49 @@ import {
 
 import { APP_VERSION } from "../config/app";
 
+import type { AppView } from "../types/Navigation";
+
 interface Props {
     collapsed: boolean;
     profileName: string;
+    activeView: AppView;
     onToggle: () => void;
     onAddEvent: () => void;
     onOpenProfile: () => void;
+    onViewChange: (
+        view: AppView
+    ) => void;
 }
 
 const navItems = [
     {
         label: "Dashboard",
         icon: LayoutDashboard,
-        active: true,
+        view: "dashboard" as AppView,
         disabled: false,
     },
     {
-        label: "Timeline",
+        label: "Calendar",
+        icon: CalendarDays,
+        view: "calendar" as AppView,
+        disabled: false,
+    },
+    {
+        label: "Journey",
         icon: TimerReset,
-        active: false,
+        view: null,
         disabled: true,
     },
     {
         label: "Statistics",
         icon: BarChart3,
-        active: false,
+        view: null,
         disabled: true,
     },
     {
         label: "Categories",
         icon: Tags,
-        active: false,
+        view: null,
         disabled: true,
     },
 ];
@@ -50,9 +63,11 @@ const navItems = [
 export default function Sidebar({
     collapsed,
     profileName,
+    activeView,
     onToggle,
     onAddEvent,
     onOpenProfile,
+    onViewChange,
 }: Props) {
     return (
         <aside
@@ -79,7 +94,7 @@ export default function Sidebar({
         >
             <div
                 className={`
-          mb-12
+          mb-10
           flex
           items-start
           justify-between
@@ -127,11 +142,21 @@ export default function Sidebar({
                 {navItems.map((item) => {
                     const Icon = item.icon;
 
+                    const active =
+                        item.view === activeView;
+
                     return (
                         <button
                             key={item.label}
                             type="button"
                             disabled={item.disabled}
+                            onClick={() => {
+                                if (item.view) {
+                                    onViewChange(
+                                        item.view
+                                    );
+                                }
+                            }}
                             className={`
                 flex
                 w-full
@@ -144,7 +169,7 @@ export default function Sidebar({
                 text-sm
                 font-semibold
                 transition
-                ${item.active
+                ${active
                                     ? "border-r-4 border-[var(--primary)] bg-[var(--surface-card-high)] text-[var(--primary)]"
                                     : "text-[var(--text-muted)] hover:bg-[var(--surface-card-high)]"
                                 }
@@ -266,7 +291,8 @@ export default function Sidebar({
                         <>
                             <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-bold text-[var(--text-main)]">
-                                    {profileName || "Curator"}
+                                    {profileName ||
+                                        "Curator"}
                                 </p>
 
                                 <p className="text-xs text-[var(--text-muted)]">

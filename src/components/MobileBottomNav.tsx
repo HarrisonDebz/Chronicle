@@ -1,38 +1,51 @@
 import {
     BarChart3,
+    CalendarDays,
     LayoutDashboard,
-    Tags,
     TimerReset,
 } from "lucide-react";
+
+import type { AppView } from "../types/Navigation";
+
+interface Props {
+    activeView: AppView;
+
+    onViewChange: (
+        view: AppView
+    ) => void;
+}
 
 const navItems = [
     {
         label: "Home",
         icon: LayoutDashboard,
-        active: true,
+        view: "dashboard" as AppView,
         disabled: false,
     },
     {
-        label: "Timeline",
+        label: "Calendar",
+        icon: CalendarDays,
+        view: "calendar" as AppView,
+        disabled: false,
+    },
+    {
+        label: "Journey",
         icon: TimerReset,
-        active: false,
+        view: null,
         disabled: true,
     },
     {
         label: "Stats",
         icon: BarChart3,
-        active: false,
-        disabled: true,
-    },
-    {
-        label: "Cats",
-        icon: Tags,
-        active: false,
+        view: null,
         disabled: true,
     },
 ];
 
-export default function MobileBottomNav() {
+export default function MobileBottomNav({
+    activeView,
+    onViewChange,
+}: Props) {
     return (
         <nav
             className="
@@ -46,7 +59,7 @@ export default function MobileBottomNav() {
         border-t
         border-[var(--border-soft)]
         bg-[var(--surface-low)]
-        px-3
+        px-2
         py-2
         md:hidden
       "
@@ -54,10 +67,21 @@ export default function MobileBottomNav() {
             {navItems.map((item) => {
                 const Icon = item.icon;
 
+                const active =
+                    item.view === activeView;
+
                 return (
                     <button
                         key={item.label}
+                        type="button"
                         disabled={item.disabled}
+                        onClick={() => {
+                            if (item.view) {
+                                onViewChange(
+                                    item.view
+                                );
+                            }
+                        }}
                         className={`
               relative
               flex
@@ -66,17 +90,17 @@ export default function MobileBottomNav() {
               items-center
               justify-center
               rounded-xl
-              px-3
+              px-2
               py-1.5
               text-xs
               font-semibold
               transition
-              ${item.active
+              ${active
                                 ? "bg-[var(--primary-strong)] text-white"
                                 : "text-[var(--text-muted)]"
                             }
               ${item.disabled
-                                ? "cursor-not-allowed opacity-70"
+                                ? "cursor-not-allowed opacity-65"
                                 : ""
                             }
             `}

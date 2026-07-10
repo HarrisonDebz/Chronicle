@@ -3,6 +3,8 @@ import {
     useState,
 } from "react";
 
+import type { AppView } from "../types/Navigation";
+
 import MobileBottomNav from "./MobileBottomNav";
 import MobileHeader from "./MobileHeader";
 import Sidebar from "./Sidebar";
@@ -10,15 +12,22 @@ import Sidebar from "./Sidebar";
 interface Props {
     children: ReactNode;
     profileName: string;
+    activeView: AppView;
     onAddEvent: () => void;
     onOpenProfile: () => void;
+
+    onViewChange: (
+        view: AppView
+    ) => void;
 }
 
 export default function AppShell({
     children,
     profileName,
+    activeView,
     onAddEvent,
     onOpenProfile,
+    onViewChange,
 }: Props) {
     const [
         sidebarCollapsed,
@@ -30,6 +39,7 @@ export default function AppShell({
             <Sidebar
                 collapsed={sidebarCollapsed}
                 profileName={profileName}
+                activeView={activeView}
                 onToggle={() =>
                     setSidebarCollapsed(
                         (value) => !value
@@ -37,6 +47,7 @@ export default function AppShell({
                 }
                 onAddEvent={onAddEvent}
                 onOpenProfile={onOpenProfile}
+                onViewChange={onViewChange}
             />
 
             <MobileHeader
@@ -59,12 +70,15 @@ export default function AppShell({
                     }
         `}
             >
-                <div className="mx-auto max-w-7xl px-4 md:px-16">
+                <div className="mx-auto max-w-7xl px-4 md:px-10 xl:px-16">
                     {children}
                 </div>
             </main>
 
-            <MobileBottomNav />
+            <MobileBottomNav
+                activeView={activeView}
+                onViewChange={onViewChange}
+            />
         </div>
     );
 }

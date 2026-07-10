@@ -6,6 +6,7 @@ import {
 import AddEventButton from "../components/AddEventButton";
 import AddEventModal from "../components/AddEventModal";
 import AppShell from "../components/AppShell";
+import CalendarView from "../components/CalendarView";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import EmptyState from "../components/EmptyState";
 import EventDetailsModal from "../components/EventDetailsModal";
@@ -21,6 +22,7 @@ import { useProfile } from "../hooks/useProfile";
 
 import type { ChronicleEvent } from "../types/Event";
 import type { EventFilterState } from "../types/Filters";
+import type { AppView } from "../types/Navigation";
 
 import {
     getMemoryEvents,
@@ -52,12 +54,18 @@ export default function Home() {
         resetProfileName,
     } = useProfile();
 
+    const [activeView, setActiveView] =
+        useState<AppView>("dashboard");
+
     const [
-        filters,
-        setFilters,
-    ] = useState<EventFilterState>(
-        DEFAULT_FILTERS
-    );
+        selectedCalendarDay,
+        setSelectedCalendarDay,
+    ] = useState<Date>(new Date());
+
+    const [filters, setFilters] =
+        useState<EventFilterState>(
+            DEFAULT_FILTERS
+        );
 
     const [
         eventFormOpen,
@@ -109,10 +117,14 @@ export default function Home() {
     );
 
     const upcomingEvents =
-        getUpcomingEvents(filteredEvents);
+        getUpcomingEvents(
+            filteredEvents
+        );
 
     const memoryEvents =
-        getMemoryEvents(filteredEvents);
+        getMemoryEvents(
+            filteredEvents
+        );
 
     const showUpcoming =
         filters.view !== "memories";
@@ -163,111 +175,135 @@ export default function Home() {
     return (
         <AppShell
             profileName={profileName}
+            activeView={activeView}
+            onViewChange={setActiveView}
             onAddEvent={openCreateEvent}
             onOpenProfile={() =>
                 setProfileSettingsOpen(true)
             }
         >
-            <section className="mb-10">
-                <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-                    <div>
-                        <p className="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-[var(--future)]">
-                            Dashboard
-                        </p>
+            {activeView === "dashboard" ? (
+                <>
+                    <section className="mb-10">
+                        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+                            <div>
+                                <p className="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-[var(--future)]">
+                                    Dashboard
+                                </p>
 
-                        <h1 className="text-4xl font-bold tracking-tight text-[var(--text-main)] md:text-5xl">
-                            Hello,{" "}
-                            {profileName || "Curator"}.
-                        </h1>
+                                <h1 className="text-4xl font-bold tracking-tight text-[var(--text-main)] md:text-5xl">
+                                    Hello,{" "}
+                                    {profileName ||
+                                        "Curator"}
+                                    .
+                                </h1>
 
-                        <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
-                            You have{" "}
-                            <span className="font-bold text-[var(--future)]">
-                                {totalUpcomingEvents.length}
-                            </span>{" "}
-                            upcoming events and{" "}
-                            <span className="font-bold text-[var(--memory)]">
-                                {totalMemoryEvents.length}
-                            </span>{" "}
-                            memories in your chronicle.
-                        </p>
-                    </div>
+                                <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
+                                    You have{" "}
+                                    <span className="font-bold text-[var(--future)]">
+                                        {
+                                            totalUpcomingEvents.length
+                                        }
+                                    </span>{" "}
+                                    upcoming events and{" "}
+                                    <span className="font-bold text-[var(--memory)]">
+                                        {
+                                            totalMemoryEvents.length
+                                        }
+                                    </span>{" "}
+                                    memories in your chronicle.
+                                </p>
+                            </div>
 
-                    <div
-                        className="
-              w-fit
-              rounded-xl
-              border
-              border-[var(--border-soft)]
-              bg-[var(--surface-card)]
-              px-4
-              py-3
-              text-sm
-              font-semibold
-              text-[var(--text-muted)]
-            "
-                    >
-                        {today}
-                    </div>
-                </div>
-            </section>
+                            <div
+                                className="
+                  w-fit
+                  rounded-xl
+                  border
+                  border-[var(--border-soft)]
+                  bg-[var(--surface-card)]
+                  px-4
+                  py-3
+                  text-sm
+                  font-semibold
+                  text-[var(--text-muted)]
+                "
+                            >
+                                {today}
+                            </div>
+                        </div>
+                    </section>
 
-            {events.length > 0 && (
-                <EventFilterBar
-                    filters={filters}
-                    resultCount={
-                        filteredEvents.length
-                    }
-                    onChange={setFilters}
-                    onClear={clearFilters}
-                />
-            )}
+                    {events.length > 0 && (
+                        <EventFilterBar
+                            filters={filters}
+                            resultCount={
+                                filteredEvents.length
+                            }
+                            onChange={setFilters}
+                            onClear={clearFilters}
+                        />
+                    )}
 
-            {events.length === 0 ? (
-                <EmptyState />
-            ) : filteredEvents.length === 0 ? (
-                <FilteredEmptyState
-                    onClear={clearFilters}
-                />
+                    {events.length === 0 ? (
+                        <EmptyState />
+                    ) : filteredEvents.length ===
+                        0 ? (
+                        <FilteredEmptyState
+                            onClear={clearFilters}
+                        />
+                    ) : (
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                            {showUpcoming && (
+                                <div
+                                    className={
+                                        showingSingleSection
+                                            ? "lg:col-span-12"
+                                            : "contents"
+                                    }
+                                >
+                                    <UpcomingSection
+                                        events={
+                                            upcomingEvents
+                                        }
+                                        onView={
+                                            setSelectedEvent
+                                        }
+                                        onDeleteRequest={
+                                            setEventToDelete
+                                        }
+                                    />
+                                </div>
+                            )}
+
+                            {showMemories && (
+                                <div
+                                    className={
+                                        showingSingleSection
+                                            ? "lg:col-span-12"
+                                            : "contents"
+                                    }
+                                >
+                                    <MemoriesTimeline
+                                        events={
+                                            memoryEvents
+                                        }
+                                        onDeleteRequest={
+                                            setEventToDelete
+                                        }
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </>
             ) : (
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                    {showUpcoming && (
-                        <div
-                            className={
-                                showingSingleSection
-                                    ? "lg:col-span-12"
-                                    : "contents"
-                            }
-                        >
-                            <UpcomingSection
-                                events={upcomingEvents}
-                                onView={
-                                    setSelectedEvent
-                                }
-                                onDeleteRequest={
-                                    setEventToDelete
-                                }
-                            />
-                        </div>
-                    )}
-
-                    {showMemories && (
-                        <div
-                            className={
-                                showingSingleSection
-                                    ? "lg:col-span-12"
-                                    : "contents"
-                            }
-                        >
-                            <MemoriesTimeline
-                                events={memoryEvents}
-                                onDeleteRequest={
-                                    setEventToDelete
-                                }
-                            />
-                        </div>
-                    )}
-                </div>
+                <CalendarView
+                    events={events}
+                    onView={setSelectedEvent}
+                    selectedDay={selectedCalendarDay}
+                    onSelectDay={setSelectedCalendarDay}
+                />
             )}
 
             <AddEventButton

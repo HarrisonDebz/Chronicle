@@ -343,6 +343,10 @@ export default function Home() {
                 onClose={closeEventForm}
                 onCreate={addEvent}
                 onUpdate={updateEvent}
+                onBrowseCategories={() => {
+                    closeEventForm();
+                    setActiveView("categories");
+                }}
             />
 
             <DeleteConfirmModal

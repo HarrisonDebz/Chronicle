@@ -1,6 +1,7 @@
 import {
     CalendarDays,
     ChevronDown,
+    ExternalLink,
     PlusCircle,
     Save,
 } from "lucide-react";
@@ -27,6 +28,9 @@ interface Props {
     onCancel: () => void;
 
     submitLabel?: string;
+
+    /** Called when the user wants to navigate to the Categories view */
+    onBrowseCategories?: () => void;
 }
 
 const categories: {
@@ -62,6 +66,7 @@ export default function EventForm({
     onSubmit,
     onCancel,
     submitLabel = "Add Event",
+    onBrowseCategories,
 }: Props) {
     const isEditing = Boolean(initialEvent);
 
@@ -298,9 +303,34 @@ export default function EventForm({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                    <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
-                        Category
-                    </label>
+                    <div className="ml-1 flex items-center justify-between">
+                        <label className="block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                            Category
+                        </label>
+
+                        {onBrowseCategories && (
+                            <button
+                                type="button"
+                                onClick={onBrowseCategories}
+                                className="
+                                    flex
+                                    items-center
+                                    gap-1
+                                    text-[10px]
+                                    font-bold
+                                    uppercase
+                                    tracking-wide
+                                    text-[var(--primary)]
+                                    opacity-70
+                                    transition
+                                    hover:opacity-100
+                                "
+                            >
+                                <ExternalLink size={11} />
+                                Browse
+                            </button>
+                        )}
+                    </div>
 
                     <div className="relative">
                         <select

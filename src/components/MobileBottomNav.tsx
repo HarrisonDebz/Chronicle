@@ -92,14 +92,14 @@ export default function MobileBottomNav({
                         className={`
               relative
               flex
-              min-w-16
+              flex-1
               flex-col
               items-center
               justify-center
               rounded-xl
-              px-2
+              px-1
               py-1.5
-              text-xs
+              text-[10px]
               font-semibold
               transition
               ${active
@@ -112,7 +112,7 @@ export default function MobileBottomNav({
                             }
             `}
                     >
-                        <Icon size={20} />
+                        <Icon size={18} />
 
                         <span>{item.label}</span>
 

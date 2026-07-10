@@ -6,6 +6,8 @@ It helps users track upcoming milestones, memories, deadlines, anniversaries, go
 
 ## Features
 
+* First-time user name capture
+* Personalized dashboard greeting
 * Create countdown events
 * Create count-up memory events
 * Automatically move expired countdowns into Memories

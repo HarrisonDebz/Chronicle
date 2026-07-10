@@ -1,1 +1,92 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap");
 @import "tailwindcss";
+
+:root {
+    font-family: "Geist", system-ui, sans-serif;
+
+    --background: #0b1326;
+    --surface: #0f172a;
+    --surface-low: #131b2e;
+    --surface-card: #171f33;
+    --surface-card-high: #222a3d;
+
+    --text-main: #dae2fd;
+    --text-muted: #9ca3b8;
+    --text-soft: #c7c4d7;
+
+    --primary: #c0c1ff;
+    --primary-strong: #8083ff;
+
+    --future: #ff9f68;
+    --future-strong: #f97316;
+
+    --memory: #9fd3c7;
+    --memory-strong: #22c55e;
+
+    --border-soft: rgba(199, 196, 215, 0.16);
+    --border-strong: rgba(199, 196, 215, 0.28);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background: var(--background);
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 30% 10%, rgba(128, 131, 255, 0.12), transparent 30%),
+        radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.08), transparent 28%),
+        var(--background);
+    color: var(--text-main);
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.glass-card {
+    background: rgba(23, 31, 51, 0.74);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--border-soft);
+}
+
+.future-glow {
+    box-shadow: 0 0 42px -18px rgba(249, 115, 22, 0.75);
+}
+
+.orange-glow {
+    box-shadow: 0 0 22px rgba(249, 115, 22, 0.18);
+}
+
+.memory-glow {
+    box-shadow: 0 0 42px -20px rgba(34, 197, 94, 0.55);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--surface-card-high);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--border-strong);
+}

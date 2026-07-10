@@ -1,156 +1,343 @@
-import { useState } from "react";
+import { CalendarDays, ChevronDown, PlusCircle } from "lucide-react";
+import { type FormEvent, useState } from "react";
+
 import type {
+    ChronicleEvent,
     EventCategory,
     EventType,
-    ChronicleEvent,
 } from "../types/Event";
 
 interface Props {
     onSubmit: (
         event: Omit<ChronicleEvent, "id" | "createdAt">
     ) => void;
+    onCancel: () => void;
 }
 
-export default function EventForm({ onSubmit }: Props) {
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [date, setDate] = useState("");
-    const [type, setType] = useState<EventType>("countdown");
-    const [category, setCategory] = useState<EventCategory>("other");
-    const [recurring, setRecurring] = useState(false);
+const categories: {
+    label: string;
+    value: EventCategory;
+}[] = [
+        { label: "Birthday", value: "birthday" },
+        { label: "Relationship", value: "relationship" },
+        { label: "Education", value: "education" },
+        { label: "Coding", value: "coding" },
+        { label: "Sports", value: "sports" },
+        { label: "Holiday", value: "holiday" },
+        { label: "Goal", value: "goal" },
+        { label: "Other", value: "other" },
+    ];
 
+export default function EventForm({
+    onSubmit,
+    onCancel,
+}: Props) {
+    const [title, setTitle] = useState("");
+    const [date, setDate] = useState("");
+    const [type, setType] =
+        useState<EventType>("countdown");
+    const [category, setCategory] =
+        useState<EventCategory | "">("");
     const [error, setError] = useState("");
 
-    function handleSubmit(e: React.FormEvent) {
+    function handleSubmit(e: FormEvent) {
         e.preventDefault();
 
         if (!title.trim()) {
-            setError("Title is required.");
+            setError("Event title is required.");
+            return;
+        }
+
+        if (!category) {
+            setError("Please select a category.");
             return;
         }
 
         if (!date) {
-            setError("Date is required.");
+            setError("Date and time are required.");
             return;
         }
 
         onSubmit({
             title: title.trim(),
-            description: description.trim(),
             date,
             type,
             category,
-            recurring,
+            recurring: false,
         });
 
         setTitle("");
-        setDescription("");
         setDate("");
         setType("countdown");
-        setCategory("other");
-        setRecurring(false);
+        setCategory("");
         setError("");
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+            onSubmit={handleSubmit}
+            className="space-y-5 p-5 md:p-6"
+        >
             {error && (
-                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                <div
+                    className="
+            rounded-xl
+            border
+            border-red-400/30
+            bg-red-500/10
+            px-4
+            py-3
+            text-sm
+            font-semibold
+            text-red-200
+          "
+                >
                     {error}
-                </p>
+                </div>
             )}
 
-            <div>
-                <label className="mb-1 block text-sm font-medium">
-                    Title
+            <div className="space-y-3">
+                <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                    Event Type
+                </label>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <label>
+                        <input
+                            type="radio"
+                            name="event-type"
+                            checked={type === "countdown"}
+                            onChange={() => setType("countdown")}
+                            className="peer sr-only"
+                        />
+
+                        <div
+                            className="
+                cursor-pointer
+                rounded-xl
+                border
+                border-[var(--border-strong)]
+                bg-[var(--surface-low)]
+                p-4
+                text-center
+                font-semibold
+                transition
+                hover:border-[var(--primary)]
+                peer-checked:border-[var(--primary)]
+                peer-checked:bg-[rgba(192,193,255,0.12)]
+                peer-checked:text-[var(--primary)]
+              "
+                        >
+                            Countdown
+                        </div>
+                    </label>
+
+                    <label>
+                        <input
+                            type="radio"
+                            name="event-type"
+                            checked={type === "countup"}
+                            onChange={() => setType("countup")}
+                            className="peer sr-only"
+                        />
+
+                        <div
+                            className="
+                cursor-pointer
+                rounded-xl
+                border
+                border-[var(--border-strong)]
+                bg-[var(--surface-low)]
+                p-4
+                text-center
+                font-semibold
+                transition
+                hover:border-[var(--primary)]
+                peer-checked:border-[var(--primary)]
+                peer-checked:bg-[rgba(192,193,255,0.12)]
+                peer-checked:text-[var(--primary)]
+              "
+                        >
+                            Count Up
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                    Event Title
                 </label>
 
                 <input
-                    placeholder="Graduation, World Cup, Anniversary..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
+                    placeholder="e.g. Graduation, First GitHub commit"
+                    className="
+            w-full
+            rounded-xl
+            border
+            border-[var(--border-strong)]
+            bg-[var(--surface-low)]
+            p-4
+            text-lg
+            font-semibold
+            text-[var(--text-main)]
+            outline-none
+            transition
+            placeholder:text-[rgba(199,196,215,0.32)]
+            focus:border-[var(--primary)]
+            focus:ring-2
+            focus:ring-[rgba(192,193,255,0.24)]
+          "
                 />
             </div>
 
-            <div>
-                <label className="mb-1 block text-sm font-medium">
-                    Description
-                </label>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-3">
+                    <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                        Category
+                    </label>
 
-                <textarea
-                    placeholder="Optional note..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="min-h-20 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
-                />
+                    <div className="relative">
+                        <select
+                            value={category}
+                            onChange={(e) =>
+                                setCategory(e.target.value as EventCategory)
+                            }
+                            className="
+                w-full
+                appearance-none
+                rounded-xl
+                border
+                border-[var(--border-strong)]
+                bg-[var(--surface-low)]
+                p-4
+                text-[var(--text-main)]
+                outline-none
+                transition
+                focus:border-[var(--primary)]
+                focus:ring-2
+                focus:ring-[rgba(192,193,255,0.24)]
+              "
+                        >
+                            <option value="" disabled>
+                                Select category
+                            </option>
+
+                            {categories.map((item) => (
+                                <option
+                                    key={item.value}
+                                    value={item.value}
+                                >
+                                    {item.label}
+                                </option>
+                            ))}
+                        </select>
+
+                        <ChevronDown
+                            size={20}
+                            className="
+                pointer-events-none
+                absolute
+                right-4
+                top-1/2
+                -translate-y-1/2
+                text-[var(--text-muted)]
+              "
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                        Date & Time
+                    </label>
+
+                    <div className="relative">
+                        <input
+                            type="datetime-local"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            className="
+                w-full
+                rounded-xl
+                border
+                border-[var(--border-strong)]
+                bg-[var(--surface-low)]
+                p-4
+                pr-12
+                text-[var(--text-main)]
+                outline-none
+                transition
+                [color-scheme:dark]
+                focus:border-[var(--primary)]
+                focus:ring-2
+                focus:ring-[rgba(192,193,255,0.24)]
+              "
+                        />
+
+                        <CalendarDays
+                            size={20}
+                            className="
+                pointer-events-none
+                absolute
+                right-4
+                top-1/2
+                -translate-y-1/2
+                text-[var(--text-muted)]
+              "
+                        />
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <label className="mb-1 block text-sm font-medium">
-                    Date
-                </label>
-
-                <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
-                />
-            </div>
-
-            <div>
-                <label className="mb-1 block text-sm font-medium">
-                    Type
-                </label>
-
-                <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value as EventType)}
-                    className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
+            <div className="flex flex-col items-center justify-end gap-3 pt-2 md:flex-row">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="
+            w-full
+            rounded-xl
+            px-6
+            py-3
+            font-semibold
+            text-[var(--text-muted)]
+            transition
+            hover:bg-[var(--surface-card-high)]
+            md:w-auto
+          "
                 >
-                    <option value="countdown">Countdown</option>
-                    <option value="countup">Count Up</option>
-                </select>
-            </div>
+                    Discard
+                </button>
 
-            <div>
-                <label className="mb-1 block text-sm font-medium">
-                    Category
-                </label>
-
-                <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as EventCategory)}
-                    className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
+                <button
+                    type="submit"
+                    className="
+            orange-glow
+            flex
+            w-full
+            items-center
+            justify-center
+            gap-2
+            rounded-xl
+            bg-[var(--future-strong)]
+            px-8
+            py-3
+            font-bold
+            uppercase
+            tracking-wide
+            text-[#2a1000]
+            transition
+            hover:brightness-110
+            active:scale-95
+            md:w-auto
+          "
                 >
-                    <option value="birthday">Birthday</option>
-                    <option value="relationship">Relationship</option>
-                    <option value="education">Education</option>
-                    <option value="coding">Coding</option>
-                    <option value="sports">Sports</option>
-                    <option value="holiday">Holiday</option>
-                    <option value="goal">Goal</option>
-                    <option value="other">Other</option>
-                </select>
+                    <PlusCircle size={19} />
+                    Add Event
+                </button>
             </div>
-
-            <label className="flex items-center gap-2 text-sm">
-                <input
-                    type="checkbox"
-                    checked={recurring}
-                    onChange={(e) => setRecurring(e.target.checked)}
-                />
-
-                Recurring event
-            </label>
-
-            <button
-                type="submit"
-                className="w-full rounded-lg bg-black px-4 py-2 font-medium text-white"
-            >
-                Create Event
-            </button>
         </form>
     );
 }

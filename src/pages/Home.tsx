@@ -15,12 +15,13 @@ import FilteredEmptyState from "../components/FilteredEmptyState";
 import JourneyView from "../components/JourneyView";
 import StatisticsView from "../components/StatisticsView";
 import MemoriesTimeline from "../components/MemoriesTimeline";
-import NamePromptModal from "../components/NamePromptModal";
+import AuthModal from "../components/AuthModal";
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
 import UpcomingSection from "../components/UpcomingSection";
 
 import { useEvents } from "../hooks/useEvents";
-import { useProfile } from "../hooks/useProfile";
+import { useAuth } from "../hooks/useAuth";
+import { useSync } from "../hooks/useSync";
 import { useToast } from "../hooks/useToast";
 import { useNotifications } from "../hooks/useNotifications";
 
@@ -47,16 +48,27 @@ const DEFAULT_FILTERS: EventFilterState = {
 export default function Home() {
     const {
         events,
+        setEvents,
         addEvent,
         updateEvent,
         deleteEvent,
     } = useEvents();
 
     const {
-        profileName,
-        saveProfileName,
-        resetProfileName,
-    } = useProfile();
+        user,
+        profile,
+        loading: authLoading,
+        updateProfile,
+        signOut,
+    } = useAuth();
+
+    const {
+        syncing,
+        lastSynced,
+        triggerSync,
+    } = useSync(user, events, setEvents);
+
+    const [authModalOpen, setAuthModalOpen] = useState(false);
 
     const { addToast } = useToast();
     const { sendNotification, permission } = useNotifications();
@@ -213,7 +225,8 @@ export default function Home() {
 
     return (
         <AppShell
-            profileName={profileName}
+            profileName={profile.displayName}
+            profilePhotoUrl={profile.photoUrl}
             activeView={activeView}
             onViewChange={setActiveView}
             onAddEvent={openCreateEvent}
@@ -232,7 +245,7 @@ export default function Home() {
 
                                 <h1 className="text-4xl font-bold tracking-tight text-[var(--text-main)] md:text-5xl">
                                     Hello,{" "}
-                                    {profileName ||
+                                    {profile.displayName ||
                                         "Curator"}
                                     .
                                 </h1>
@@ -392,20 +405,27 @@ export default function Home() {
 
             <ProfileSettingsModal
                 open={profileSettingsOpen}
-                currentName={profileName}
+                currentName={profile.displayName}
+                currentPhotoUrl={profile.photoUrl}
+                user={user}
+                syncing={syncing}
+                lastSynced={lastSynced}
                 onClose={() =>
                     setProfileSettingsOpen(false)
                 }
-                onSave={saveProfileName}
-                onReset={resetProfileName}
+                onSave={updateProfile}
+                onReset={() => updateProfile("", "")}
+                onSignOut={signOut}
+                onOpenAuth={() => setAuthModalOpen(true)}
+                triggerSync={triggerSync}
             />
 
-            <NamePromptModal
+            <AuthModal
                 open={
-                    !profileName &&
-                    !profileSettingsOpen
+                    authModalOpen ||
+                    (!authLoading && !profile.displayName && !profileSettingsOpen)
                 }
-                onSave={saveProfileName}
+                onSuccess={() => setAuthModalOpen(false)}
             />
         </AppShell>
     );

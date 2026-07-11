@@ -47,6 +47,7 @@ export function useEvents() {
 
     return {
         events,
+        setEvents,
         addEvent,
         updateEvent,
         deleteEvent,

@@ -18,6 +18,7 @@ import type { AppView } from "../types/Navigation";
 interface Props {
     collapsed: boolean;
     profileName: string;
+    profilePhotoUrl?: string;
     activeView: AppView;
     onToggle: () => void;
     onAddEvent: () => void;
@@ -63,6 +64,7 @@ const navItems = [
 export default function Sidebar({
     collapsed,
     profileName,
+    profilePhotoUrl,
     activeView,
     onToggle,
     onAddEvent,
@@ -288,21 +290,29 @@ export default function Sidebar({
                         }
           `}
                 >
-                    <div
-                        className="
-              flex
-              h-9
-              w-9
-              shrink-0
-              items-center
-              justify-center
-              rounded-full
-              bg-[rgba(192,193,255,0.12)]
-              text-[var(--primary)]
-            "
-                    >
-                        <UserRound size={18} />
-                    </div>
+                    {profilePhotoUrl ? (
+                        <img
+                            src={profilePhotoUrl}
+                            alt={profileName}
+                            className="h-9 w-9 shrink-0 rounded-xl object-cover border border-[rgba(192,193,255,0.2)] shadow-md"
+                        />
+                    ) : (
+                        <div
+                            className="
+                  flex
+                  h-9
+                  w-9
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-[rgba(192,193,255,0.12)]
+                  text-[var(--primary)]
+                "
+                        >
+                            <UserRound size={18} />
+                        </div>
+                    )}
 
                     {!collapsed && (
                         <>

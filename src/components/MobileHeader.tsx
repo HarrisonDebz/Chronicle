@@ -6,11 +6,13 @@ import {
 interface Props {
     onAddEvent: () => void;
     onOpenProfile: () => void;
+    profilePhotoUrl?: string;
 }
 
 export default function MobileHeader({
     onAddEvent,
     onOpenProfile,
+    profilePhotoUrl,
 }: Props) {
     return (
         <header
@@ -55,18 +57,25 @@ export default function MobileHeader({
                     type="button"
                     onClick={onOpenProfile}
                     className="
+            overflow-hidden
             rounded-full
             border
             border-[var(--border-soft)]
             bg-[var(--surface-card)]
-            p-2
+            p-0.5
             text-[var(--primary)]
             transition
             active:scale-95
           "
                     aria-label="Open profile settings"
                 >
-                    <UserRound size={20} />
+                    {profilePhotoUrl ? (
+                        <img src={profilePhotoUrl} alt="Profile" className="h-7 w-7 rounded-full object-cover" />
+                    ) : (
+                        <div className="p-1">
+                            <UserRound size={18} />
+                        </div>
+                    )}
                 </button>
 
                 <button

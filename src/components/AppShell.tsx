@@ -12,6 +12,7 @@ import Sidebar from "./Sidebar";
 interface Props {
     children: ReactNode;
     profileName: string;
+    profilePhotoUrl?: string;
     activeView: AppView;
     onAddEvent: () => void;
     onOpenProfile: () => void;
@@ -24,6 +25,7 @@ interface Props {
 export default function AppShell({
     children,
     profileName,
+    profilePhotoUrl,
     activeView,
     onAddEvent,
     onOpenProfile,
@@ -39,6 +41,7 @@ export default function AppShell({
             <Sidebar
                 collapsed={sidebarCollapsed}
                 profileName={profileName}
+                profilePhotoUrl={profilePhotoUrl}
                 activeView={activeView}
                 onToggle={() =>
                     setSidebarCollapsed(
@@ -53,6 +56,7 @@ export default function AppShell({
             <MobileHeader
                 onAddEvent={onAddEvent}
                 onOpenProfile={onOpenProfile}
+                profilePhotoUrl={profilePhotoUrl}
             />
 
             <main

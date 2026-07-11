@@ -4,7 +4,12 @@ import {
     Save,
     UserRound,
     Bell,
-    BellRing
+    BellRing,
+    Cloud,
+    CloudRain,
+    LogOut,
+    UserPlus,
+    RefreshCw
 } from "lucide-react";
 
 import {
@@ -14,23 +19,49 @@ import {
 
 import { APP_VERSION } from "../config/app";
 import { useNotifications } from "../hooks/useNotifications";
+import type { User } from "@supabase/supabase-js";
 
 interface Props {
     open: boolean;
     currentName: string;
+    currentPhotoUrl: string;
+    user: User | null;
+    syncing: boolean;
+    lastSynced: string | null;
     onClose: () => void;
-    onSave: (name: string) => void;
+    onSave: (name: string, photoUrl: string) => void;
     onReset: () => void;
+    onSignOut: () => void;
+    onOpenAuth: () => void;
+    triggerSync: () => void;
 }
+
+const PRESET_AVATARS = [
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60",
+    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=60",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60",
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=60",
+    "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=60",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=60",
+];
 
 export default function ProfileSettingsModal({
     open,
     currentName,
+    currentPhotoUrl,
+    user,
+    syncing,
+    lastSynced,
     onClose,
     onSave,
     onReset,
+    onSignOut,
+    onOpenAuth,
+    triggerSync,
 }: Props) {
     const [name, setName] = useState(currentName);
+    const [photoUrl, setPhotoUrl] = useState(currentPhotoUrl);
+    const [customPhotoInput, setCustomPhotoInput] = useState(false);
     const [error, setError] = useState("");
     const { permission, requestPermission } = useNotifications();
 
@@ -42,7 +73,7 @@ export default function ProfileSettingsModal({
             return;
         }
 
-        onSave(name);
+        onSave(name.trim(), photoUrl.trim());
         onClose();
     }
 
@@ -109,45 +140,54 @@ export default function ProfileSettingsModal({
                     p-6
                 "
                         >
-                            <div
-                                className="
-                    flex
-                    h-12
-                    w-12
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-[rgba(192,193,255,0.12)]
-                    text-[var(--primary)]
-                    "
-                            >
-                                <UserRound size={25} />
-                            </div>
+                            <div className="flex items-center gap-4">
+                                {photoUrl ? (
+                                    <img
+                                        src={photoUrl}
+                                        alt={name}
+                                        className="h-14 w-14 rounded-2xl object-cover border-2 border-[var(--primary)] shadow-lg"
+                                    />
+                                ) : (
+                                    <div
+                                        className="
+                            flex
+                            h-14
+                            w-14
+                            items-center
+                            justify-center
+                            rounded-2xl
+                            bg-[rgba(192,193,255,0.12)]
+                            text-[var(--primary)]
+                            "
+                                    >
+                                        <UserRound size={28} />
+                                    </div>
+                                )}
 
-                            <div>
-                                <p
-                                    className="
-                        text-xs
-                        font-bold
-                        uppercase
-                        tracking-[0.2em]
-                        text-[var(--primary)]
-                    "
-                                >
-                                    Profile
-                                </p>
+                                <div>
+                                    <p
+                                        className="
+                            text-xs
+                            font-bold
+                            uppercase
+                            tracking-[0.2em]
+                            text-[var(--primary)]
+                        "
+                                    >
+                                        Profile
+                                    </p>
 
-                                <h2 className="mt-1 text-2xl font-bold text-[var(--text-main)]">
-                                    Personal settings
-                                </h2>
+                                    <h2 className="mt-1 text-2xl font-bold text-[var(--text-main)]">
+                                        Personal settings
+                                    </h2>
+                                </div>
                             </div>
                         </header>
 
-                        <div className="p-6">
+                        <div className="p-6 max-h-[70vh] overflow-y-auto space-y-5">
                             {error && (
                                 <div
                                     className="
-                        mb-5
                         rounded-xl
                         border
                         border-red-400/30
@@ -163,28 +203,16 @@ export default function ProfileSettingsModal({
                                 </div>
                             )}
 
+                            {/* Display Name */}
                             <div className="space-y-2">
-                                <label
-                                    className="
-                        ml-1
-                        block
-                        text-xs
-                        font-bold
-                        uppercase
-                        tracking-wide
-                        text-[var(--text-soft)]
-                    "
-                                >
+                                <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
                                     Display Name
                                 </label>
 
                                 <input
                                     value={name}
-                                    onChange={(event) =>
-                                        setName(event.target.value)
-                                    }
+                                    onChange={(event) => setName(event.target.value)}
                                     placeholder="What should Chronicle call you?"
-                                    autoFocus
                                     className="
                         w-full
                         rounded-xl
@@ -192,31 +220,136 @@ export default function ProfileSettingsModal({
                         border-[var(--border-strong)]
                         bg-[var(--surface-low)]
                         p-4
-                        text-lg
+                        text-base
                         font-semibold
                         text-[var(--text-main)]
                         outline-none
                         transition
                         placeholder:text-[rgba(199,196,215,0.32)]
                         focus:border-[var(--primary)]
-                        focus:ring-2
-                        focus:ring-[rgba(192,193,255,0.24)]
                     "
                                 />
                             </div>
-                            
-                            <div className="mt-5 space-y-2">
-                                <label
-                                    className="
-                        ml-1
-                        block
-                        text-xs
-                        font-bold
-                        uppercase
-                        tracking-wide
-                        text-[var(--text-soft)]
-                    "
-                                >
+
+                            {/* Profile Picture */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between ml-1">
+                                    <label className="block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                                        Profile Photo
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCustomPhotoInput(!customPhotoInput)}
+                                        className="text-[10px] font-bold uppercase tracking-wide text-[var(--primary)] opacity-80 hover:opacity-100 transition"
+                                    >
+                                        {customPhotoInput ? "Use Preset" : "Custom URL"}
+                                    </button>
+                                </div>
+
+                                {customPhotoInput ? (
+                                    <input
+                                        value={photoUrl}
+                                        onChange={(event) => setPhotoUrl(event.target.value)}
+                                        placeholder="Paste a photo URL..."
+                                        className="
+                                            w-full
+                                            rounded-xl
+                                            border
+                                            border-[var(--border-strong)]
+                                            bg-[var(--surface-low)]
+                                            p-3
+                                            text-sm
+                                            text-[var(--text-main)]
+                                            outline-none
+                                            transition
+                                            focus:border-[var(--primary)]
+                                        "
+                                    />
+                                ) : (
+                                    <div className="grid grid-cols-6 gap-2">
+                                        {PRESET_AVATARS.map((url, i) => (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => setPhotoUrl(url)}
+                                                className={`h-11 w-11 rounded-xl overflow-hidden border-2 transition active:scale-95 ${photoUrl === url ? "border-[var(--primary)] scale-105" : "border-transparent opacity-70 hover:opacity-100"}`}
+                                            >
+                                                <img src={url} alt="Preset avatar" className="h-full w-full object-cover" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Supabase Account & Sync Section */}
+                            <div className="space-y-2">
+                                <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                                    Cloud Sync & Accounts
+                                </label>
+
+                                {user ? (
+                                    <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-low)] p-4 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-green-400">
+                                                <Cloud size={16} />
+                                                <span className="text-xs font-bold uppercase tracking-wide">Connected</span>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={triggerSync}
+                                                disabled={syncing}
+                                                className="flex items-center gap-1.5 text-xs font-bold text-[var(--primary)] hover:underline disabled:opacity-50"
+                                            >
+                                                <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
+                                                Sync Now
+                                            </button>
+                                        </div>
+
+                                        <div className="text-xs text-[var(--text-muted)] space-y-1">
+                                            <p>Account: <strong className="text-[var(--text-main)]">{user.email}</strong></p>
+                                            <p>Last Sync: <strong className="text-[var(--text-main)]">{lastSynced || "Just now"}</strong></p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                onSignOut();
+                                                onClose();
+                                            }}
+                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500/10 p-3 text-sm font-bold text-red-300 hover:bg-red-500/20 transition"
+                                        >
+                                            <LogOut size={16} />
+                                            Sign Out
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--surface-low)] p-4 space-y-3">
+                                        <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                                            <CloudRain size={16} />
+                                            <span className="text-xs font-bold uppercase tracking-wide">Offline Local Storage</span>
+                                        </div>
+                                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                                            Log in to synchronize your milestones and settings securely in the cloud.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                onClose();
+                                                onOpenAuth();
+                                            }}
+                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--primary)] p-3 text-sm font-bold text-white hover:brightness-110 active:scale-95 transition"
+                                        >
+                                            <UserPlus size={16} />
+                                            Connect Account
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Notifications Setting */}
+                            <div className="space-y-2">
+                                <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
                                     Notifications
                                 </label>
                                 <div className="flex items-center justify-between rounded-xl border border-[var(--border-strong)] bg-[var(--surface-low)] p-4">
@@ -243,60 +376,22 @@ export default function ProfileSettingsModal({
                                 </div>
                             </div>
 
-                            <div
-                                className="
-                    mt-5
-                    flex
-                    items-center
-                    justify-between
-                    rounded-xl
-                    border
-                    border-[var(--border-soft)]
-                    bg-[var(--surface-low)]
-                    p-4
-                    "
-                            >
+                            {/* Version Info */}
+                            <div className="flex items-center justify-between rounded-xl border border-[var(--border-soft)] bg-[var(--surface-low)] p-4">
                                 <div>
-                                    <p
-                                        className="
-                        text-xs
-                        font-bold
-                        uppercase
-                        tracking-wide
-                        text-[var(--text-muted)]
-                        "
-                                    >
+                                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">
                                         Chronicle Version
                                     </p>
-
                                     <p className="mt-1 font-semibold text-[var(--text-main)]">
                                         v{APP_VERSION}
                                     </p>
                                 </div>
-
-                                <span
-                                    className="
-                        rounded-full
-                        border
-                        border-orange-300/20
-                        bg-orange-400/10
-                        px-3
-                        py-1
-                        text-xs
-                        font-bold
-                        text-[var(--future)]
-                    "
-                                >
+                                <span className="rounded-full border border-orange-300/20 bg-orange-400/10 px-3 py-1 text-xs font-bold text-[var(--future)]">
                                     Active
                                 </span>
                             </div>
 
-                            <p className="mt-4 text-sm leading-relaxed text-[var(--text-muted)]">
-                                Your display name is saved locally in this browser and is used for
-                                the dashboard greeting.
-                            </p>
-
-                            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                            <div className="flex flex-col gap-3 sm:flex-row pt-2">
                                 <button
                                     type="button"
                                     onClick={onClose}
@@ -344,7 +439,6 @@ export default function ProfileSettingsModal({
                                 type="button"
                                 onClick={handleReset}
                                 className="
-                    mt-4
                     flex
                     w-full
                     items-center
@@ -352,7 +446,7 @@ export default function ProfileSettingsModal({
                     gap-2
                     rounded-xl
                     px-5
-                    py-3
+                    py-2
                     text-sm
                     font-semibold
                     text-red-300

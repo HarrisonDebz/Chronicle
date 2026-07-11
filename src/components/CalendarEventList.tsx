@@ -12,6 +12,7 @@ import {
 
 import type { ChronicleEvent } from "../types/Event";
 
+import CategoryIcon from "./CategoryIcon";
 import {
     getCategoryInfo,
 } from "../utils/categories";
@@ -113,8 +114,6 @@ export default function CalendarEventList({
                                 event.category
                             );
 
-                        const Icon = category.icon;
-
                         return (
                             <motion.button
                                 key={event.id}
@@ -154,9 +153,9 @@ export default function CalendarEventList({
                                                 ? "bg-emerald-400/10 text-[var(--memory)]"
                                                 : "bg-orange-400/10 text-[var(--future)]"
                                             }
-                    `}
+                     `}
                                     >
-                                        <Icon size={20} />
+                                        <CategoryIcon category={event.category} customCategory={event.customCategory} size={20} />
                                     </div>
 
                                     <div className="min-w-0 flex-1">

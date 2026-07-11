@@ -26,9 +26,6 @@ interface Props {
     onUpdate: (
         event: ChronicleEvent
     ) => void;
-
-    /** Navigates the user to the Categories view */
-    onBrowseCategories?: () => void;
 }
 
 export default function AddEventModal({
@@ -37,7 +34,6 @@ export default function AddEventModal({
     onClose,
     onCreate,
     onUpdate,
-    onBrowseCategories,
 }: Props) {
     const isEditing = Boolean(eventToEdit);
 
@@ -164,7 +160,6 @@ export default function AddEventModal({
                                         ? "Save Changes"
                                         : "Add Event"
                                 }
-                                onBrowseCategories={onBrowseCategories}
                             />
                         </div>
                     </motion.div>

@@ -32,14 +32,22 @@ export default function MobileHeader({
         md:hidden
       "
         >
-            <div>
-                <h1 className="text-xl font-bold text-[var(--primary)]">
-                    Chronicle
-                </h1>
+            <div className="flex items-center gap-3">
+                <img
+                    src="/app-icon.jpg"
+                    alt="Chronicle"
+                    className="h-9 w-9 rounded-xl object-cover shadow-lg"
+                />
 
-                <p className="text-xs text-[var(--text-muted)]">
-                    Deep Indigo
-                </p>
+                <div>
+                    <h1 className="text-xl font-bold text-[var(--primary)]">
+                        Chronicle
+                    </h1>
+
+                    <p className="text-xs text-[var(--text-muted)]">
+                        Deep Indigo
+                    </p>
+                </div>
             </div>
 
             <div className="flex items-center gap-3">

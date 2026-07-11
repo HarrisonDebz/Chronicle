@@ -96,7 +96,7 @@ export default function Sidebar({
                 className={`
           mb-10
           flex
-          items-start
+          items-center
           justify-between
           px-6
           ${collapsed
@@ -105,15 +105,29 @@ export default function Sidebar({
                     }
         `}
             >
-                {!collapsed && (
-                    <div>
-                        <h1 className="text-2xl font-bold text-[var(--primary)]">
-                            Chronicle
-                        </h1>
+                {collapsed ? (
+                    <img
+                        src="/app-icon.jpg"
+                        alt="Chronicle"
+                        className="h-10 w-10 rounded-xl object-cover shadow-lg"
+                    />
+                ) : (
+                    <div className="flex items-center gap-3">
+                        <img
+                            src="/app-icon.jpg"
+                            alt="Chronicle"
+                            className="h-10 w-10 rounded-xl object-cover shadow-lg"
+                        />
 
-                        <p className="text-sm font-medium text-[var(--text-muted)]">
-                            Deep Indigo Edition
-                        </p>
+                        <div>
+                            <h1 className="text-2xl font-bold text-[var(--primary)]">
+                                Chronicle
+                            </h1>
+
+                            <p className="text-sm font-medium text-[var(--text-muted)]">
+                                Deep Indigo Edition
+                            </p>
+                        </div>
                     </div>
                 )}
 

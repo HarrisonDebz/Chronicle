@@ -9,18 +9,26 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'pwa-icon.svg'],
+      includeAssets: ['favicon.svg', 'app-icon.jpg'],
       manifest: {
         name: 'Chronicle',
         short_name: 'Chronicle',
         description: 'Your personal time management and memories app.',
-        theme_color: '#000000',
+        theme_color: '#0b1326',
+        background_color: '#0b1326',
+        display: 'standalone',
         icons: [
           {
-            src: 'pwa-icon.svg',
+            src: 'app-icon.jpg',
             sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
+            type: 'image/jpeg',
+            purpose: 'any'
+          },
+          {
+            src: 'app-icon.jpg',
+            sizes: '192x192',
+            type: 'image/jpeg',
+            purpose: 'maskable'
           }
         ]
       }

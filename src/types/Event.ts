@@ -21,6 +21,9 @@ export interface ChronicleEvent {
 
     category: EventCategory;
 
+    /** Custom label shown when category is "other" */
+    customCategory?: string;
+
     recurring: boolean;
 
     createdAt: string;

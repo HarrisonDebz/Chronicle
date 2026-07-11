@@ -380,10 +380,6 @@ export default function Home() {
                     updateEvent(eventInput);
                     addToast(`Updated "${eventInput.title}"`, 'success');
                 }}
-                onBrowseCategories={() => {
-                    closeEventForm();
-                    setActiveView("categories");
-                }}
             />
 
             <DeleteConfirmModal

@@ -85,7 +85,7 @@ export default function NamePromptModal({
                 "
                         >
                             <img
-                                src="/app-icon.jpg"
+                                src="/app-icon.png"
                                 alt="Chronicle"
                                 className="h-full w-full object-cover"
                             />

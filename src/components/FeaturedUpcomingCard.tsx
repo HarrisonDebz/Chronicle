@@ -6,6 +6,7 @@ import {
 
 import type { ChronicleEvent } from "../types/Event";
 
+import CategoryIcon from "./CategoryIcon";
 import {
     getCategoryInfo,
 } from "../utils/categories";
@@ -37,9 +38,6 @@ export default function FeaturedUpcomingCard({
     onDeleteRequest,
 }: Props) {
     const category = getCategoryInfo(event.category);
-
-    const Icon = category.icon;
-
     const progress = getProgress(event);
 
     return (
@@ -108,7 +106,7 @@ export default function FeaturedUpcomingCard({
               text-[var(--future)]
             "
                     >
-                        <Icon size={24} />
+                        <CategoryIcon category={event.category} customCategory={event.customCategory} size={24} />
                     </div>
 
                     <div>
@@ -117,7 +115,7 @@ export default function FeaturedUpcomingCard({
                         </h2>
 
                         <p className="text-sm font-medium text-[var(--text-muted)]">
-                            {category.label}
+                            {event.customCategory || category.label}
                         </p>
                     </div>
                 </div>

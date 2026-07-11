@@ -8,6 +8,7 @@ import {
 
 import type { ChronicleEvent } from "../types/Event";
 
+import CategoryIcon from "./CategoryIcon";
 import {
     getCategoryInfo,
 } from "../utils/categories";
@@ -42,12 +43,11 @@ export default function EventDetailsModal({
     onDeleteRequest,
 }: Props) {
     const category = event ? getCategoryInfo(event.category) : null;
-    const Icon = category?.icon;
     const completed = event ? isCompletedEvent(event) : false;
 
     return (
         <AnimatePresence>
-            {event && category && Icon && (
+            {event && category && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -118,7 +118,7 @@ export default function EventDetailsModal({
                                         }
                     `}
                                 >
-                                    <Icon size={25} />
+                                    <CategoryIcon category={event.category} customCategory={event.customCategory} size={25} />
                                 </div>
 
                         <div className="min-w-0 flex-1">
@@ -146,7 +146,7 @@ export default function EventDetailsModal({
                             </h2>
 
                             <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
-                                {category.label}
+                                {event.customCategory || category.label}
                             </p>
                         </div>
                     </div>

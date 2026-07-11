@@ -8,6 +8,7 @@ import {
     getElapsedTime,
 } from "../utils/date";
 
+import CategoryIcon from "./CategoryIcon";
 import {
     getCategoryInfo,
 } from "../utils/categories";
@@ -31,8 +32,6 @@ export default function EventCard({
     onDeleteRequest,
 }: Props) {
     const category = getCategoryInfo(event.category);
-
-    const Icon = category.icon;
 
     const completed = isCompletedEvent(event);
 
@@ -66,7 +65,7 @@ export default function EventCard({
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <Icon size={22} />
+                    <CategoryIcon category={event.category} customCategory={event.customCategory} size={22} className="text-gray-500" />
 
                     <div>
                         <h2 className="text-xl font-semibold">
@@ -74,7 +73,7 @@ export default function EventCard({
                         </h2>
 
                         <p className="text-sm text-gray-500">
-                            {category.label}
+                            {event.customCategory || category.label}
                         </p>
                     </div>
                 </div>

@@ -5,9 +5,7 @@ import {
 
 import type { ChronicleEvent } from "../types/Event";
 
-import {
-    getCategoryInfo,
-} from "../utils/categories";
+import CategoryIcon from "./CategoryIcon";
 
 import {
     formatMemoryDate,
@@ -24,10 +22,6 @@ export default function MemoryTimelineItem({
     faded = false,
     onDeleteRequest,
 }: Props) {
-    const category = getCategoryInfo(event.category);
-
-    const Icon = category.icon;
-
     return (
         <article
             className={`
@@ -63,7 +57,7 @@ export default function MemoryTimelineItem({
           shadow-[0_0_12px_rgba(34,197,94,0.18)]
         "
             >
-                <Icon size={18} />
+                <CategoryIcon category={event.category} customCategory={event.customCategory} size={18} />
             </div>
 
             <div

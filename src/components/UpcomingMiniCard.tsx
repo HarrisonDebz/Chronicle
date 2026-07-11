@@ -2,6 +2,7 @@ import { Trash2 } from "lucide-react";
 
 import type { ChronicleEvent } from "../types/Event";
 
+import CategoryIcon from "./CategoryIcon";
 import {
     getCategoryInfo,
 } from "../utils/categories";
@@ -24,9 +25,6 @@ export default function UpcomingMiniCard({
     onDeleteRequest,
 }: Props) {
     const category = getCategoryInfo(event.category);
-
-    const Icon = category.icon;
-
     const progress = getProgress(event);
 
     return (
@@ -55,7 +53,7 @@ export default function UpcomingMiniCard({
             text-[var(--future)]
           "
                 >
-                    <Icon size={22} />
+                    <CategoryIcon category={event.category} customCategory={event.customCategory} size={22} />
                 </div>
 
                 <span
@@ -78,7 +76,7 @@ export default function UpcomingMiniCard({
             </h3>
 
             <p className="min-h-12 text-sm text-[var(--text-muted)]">
-                {event.description || category.label}
+                {event.description || event.customCategory || category.label}
             </p>
 
             <div className="mt-6 h-2 w-full overflow-hidden rounded-full bg-[var(--surface-card-high)]">

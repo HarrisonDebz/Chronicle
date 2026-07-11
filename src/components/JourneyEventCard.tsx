@@ -9,6 +9,7 @@ import type {
     ChronicleEvent,
 } from "../types/Event";
 
+import CategoryIcon from "./CategoryIcon";
 import {
     getCategoryInfo,
 } from "../utils/categories";
@@ -45,8 +46,6 @@ export default function JourneyEventCard({
         getCategoryInfo(
             event.category
         );
-
-    const Icon = category.icon;
 
     const progress =
         getProgress(event);
@@ -134,13 +133,15 @@ export default function JourneyEventCard({
           "
                 >
                     <div className="flex min-w-0 items-center gap-3">
-                        <Icon
+                        <CategoryIcon
+                            category={event.category}
+                            customCategory={event.customCategory}
                             size={22}
                             className={
                                 isMemory
                                     ? "shrink-0 text-[var(--memory)]"
                                     : "shrink-0 text-[var(--future)]"
-                            }
+                             }
                         />
 
                         <div className="min-w-0">
@@ -157,7 +158,7 @@ export default function JourneyEventCard({
                             </h2>
 
                             <p className="mt-1 text-xs font-semibold text-[var(--text-muted)]">
-                                {category.label}
+                                {event.customCategory || category.label}
                             </p>
                         </div>
                     </div>
@@ -237,7 +238,7 @@ export default function JourneyEventCard({
           "
                 >
                     {event.description ||
-                        `A ${category.label.toLowerCase()} event in your Chronicle.`}
+                        `A ${(event.customCategory || category.label).toLowerCase()} event in your Chronicle.`}
                 </p>
 
                 <div

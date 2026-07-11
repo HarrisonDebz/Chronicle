@@ -107,16 +107,16 @@ export default function Sidebar({
             >
                 {collapsed ? (
                     <img
-                        src="/app-icon.jpg"
+                        src="/app-icon.png"
                         alt="Chronicle"
-                        className="h-10 w-10 rounded-xl object-cover shadow-lg"
+                        className="h-10 w-10 rounded-xl object-contain shadow-lg"
                     />
                 ) : (
                     <div className="flex items-center gap-3">
                         <img
-                            src="/app-icon.jpg"
+                            src="/app-icon.png"
                             alt="Chronicle"
-                            className="h-10 w-10 rounded-xl object-cover shadow-lg"
+                            className="h-10 w-10 flex-shrink-0 rounded-xl object-contain shadow-lg"
                         />
 
                         <div>

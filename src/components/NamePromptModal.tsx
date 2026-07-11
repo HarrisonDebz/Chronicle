@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles } from "lucide-react";
 import { type FormEvent, useState } from "react";
 
 interface Props {
@@ -76,16 +75,20 @@ export default function NamePromptModal({
                             className="
                     mb-5
                     flex
-                    h-14
-                    w-14
+                    h-16
+                    w-16
                     items-center
                     justify-center
                     rounded-2xl
-                    bg-orange-400/10
-                    text-[var(--future)]
+                    overflow-hidden
+                    shadow-xl
                 "
                         >
-                            <Sparkles size={28} />
+                            <img
+                                src="/app-icon.jpg"
+                                alt="Chronicle"
+                                className="h-full w-full object-cover"
+                            />
                         </div>
 
                         <p

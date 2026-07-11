@@ -1,9 +1,9 @@
 import {
     CalendarDays,
     ChevronDown,
-    ExternalLink,
     PlusCircle,
     Save,
+    Tag,
 } from "lucide-react";
 
 import {
@@ -28,9 +28,6 @@ interface Props {
     onCancel: () => void;
 
     submitLabel?: string;
-
-    /** Called when the user wants to navigate to the Categories view */
-    onBrowseCategories?: () => void;
 }
 
 const categories: {
@@ -66,7 +63,6 @@ export default function EventForm({
     onSubmit,
     onCancel,
     submitLabel = "Add Event",
-    onBrowseCategories,
 }: Props) {
     const isEditing = Boolean(initialEvent);
 
@@ -93,6 +89,11 @@ export default function EventForm({
     const [category, setCategory] =
         useState<EventCategory | "">(
             initialEvent?.category ?? ""
+        );
+
+    const [customCategory, setCustomCategory] =
+        useState(
+            initialEvent?.customCategory ?? ""
         );
 
     const [error, setError] = useState("");
@@ -130,6 +131,11 @@ export default function EventForm({
             date,
             type,
             category,
+
+            customCategory:
+                category === "other" && customCategory.trim()
+                    ? customCategory.trim()
+                    : undefined,
 
             recurring:
                 initialEvent?.recurring ?? false,
@@ -307,40 +313,20 @@ export default function EventForm({
                         <label className="block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
                             Category
                         </label>
-
-                        {onBrowseCategories && (
-                            <button
-                                type="button"
-                                onClick={onBrowseCategories}
-                                className="
-                                    flex
-                                    items-center
-                                    gap-1
-                                    text-[10px]
-                                    font-bold
-                                    uppercase
-                                    tracking-wide
-                                    text-[var(--primary)]
-                                    opacity-70
-                                    transition
-                                    hover:opacity-100
-                                "
-                            >
-                                <ExternalLink size={11} />
-                                Browse
-                            </button>
-                        )}
                     </div>
 
                     <div className="relative">
                         <select
                             value={category}
-                            onChange={(event) =>
+                            onChange={(event) => {
                                 setCategory(
                                     event.target
                                         .value as EventCategory
-                                )
-                            }
+                                );
+                                if (event.target.value !== "other") {
+                                    setCustomCategory("");
+                                }
+                            }}
                             className="
                 w-full
                 appearance-none
@@ -388,6 +374,48 @@ export default function EventForm({
               "
                         />
                     </div>
+
+                    {category === "other" && (
+                        <div className="relative mt-2">
+                            <input
+                                autoFocus
+                                value={customCategory}
+                                onChange={(e) =>
+                                    setCustomCategory(
+                                        e.target.value
+                                    )
+                                }
+                                placeholder="Name your category…"
+                                className="
+                    w-full
+                    rounded-xl
+                    border
+                    border-[var(--primary)]/40
+                    bg-[var(--surface-low)]
+                    p-4
+                    pl-11
+                    text-[var(--text-main)]
+                    outline-none
+                    transition
+                    placeholder:text-[rgba(199,196,215,0.32)]
+                    focus:border-[var(--primary)]
+                    focus:ring-2
+                    focus:ring-[rgba(192,193,255,0.24)]
+                "
+                            />
+                            <Tag
+                                size={16}
+                                className="
+                    pointer-events-none
+                    absolute
+                    left-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-[var(--primary)]
+                "
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div className="space-y-2">

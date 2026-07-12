@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 
 import type {
@@ -6,8 +6,29 @@ import type {
     ChronicleEventInput,
 } from "../types/Event";
 
+const STORAGE_KEY = "chronicle_events";
+
+function loadFromStorage(): ChronicleEvent[] {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? (JSON.parse(raw) as ChronicleEvent[]) : [];
+    } catch {
+        return [];
+    }
+}
+
 export function useEvents() {
-    const [events, setEvents] = useState<ChronicleEvent[]>([]);
+    const [events, setEventsState] = useState<ChronicleEvent[]>(loadFromStorage);
+
+    // Persist every change back to localStorage
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    }, [events]);
+
+    // Wrapper so external callers (e.g. useSync) can replace the full list
+    function setEvents(next: ChronicleEvent[]) {
+        setEventsState(next);
+    }
 
     function addEvent(event: ChronicleEventInput) {
         const newEvent: ChronicleEvent = {
@@ -16,14 +37,14 @@ export function useEvents() {
             createdAt: new Date().toISOString(),
         };
 
-        setEvents((currentEvents) => [
+        setEventsState((currentEvents) => [
             ...currentEvents,
             newEvent,
         ]);
     }
 
     function updateEvent(updatedEvent: ChronicleEvent) {
-        setEvents((currentEvents) =>
+        setEventsState((currentEvents) =>
             currentEvents.map((event) =>
                 event.id === updatedEvent.id
                     ? updatedEvent
@@ -33,7 +54,7 @@ export function useEvents() {
     }
 
     function deleteEvent(id: string) {
-        setEvents((currentEvents) =>
+        setEventsState((currentEvents) =>
             currentEvents.filter(
                 (event) => event.id !== id
             )

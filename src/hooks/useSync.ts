@@ -3,6 +3,8 @@ import { supabase } from "../config/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import type { ChronicleEvent, EventType, EventCategory } from "../types/Event";
 
+const STORAGE_KEY = "chronicle_events";
+
 interface SupabaseEvent {
     id: string;
     user_id: string;
@@ -16,19 +18,36 @@ interface SupabaseEvent {
     created_at: string;
 }
 
+function readLocalEvents(): ChronicleEvent[] {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? (JSON.parse(raw) as ChronicleEvent[]) : [];
+    } catch {
+        return [];
+    }
+}
+
 export function useSync(
     user: User | null,
-    localEvents: ChronicleEvent[],
+    _localEvents: ChronicleEvent[],
     setLocalEvents: (events: ChronicleEvent[]) => void
 ) {
     const [syncing, setSyncing] = useState(false);
-    const [lastSynced, setLastSynced] = useState<string | null>(null);
+    const [lastSynced, setLastSynced] = useState<string | null>(() =>
+        localStorage.getItem("chronicle_last_synced")
+    );
     // Tracks whether the first sync has completed this session
     const hasInitialised = useRef(false);
+    const syncingRef = useRef(false);
 
-    const performSync = useCallback(async (currentUser: User, eventsToSync: ChronicleEvent[]) => {
-        if (syncing) return;
+    const performSync = useCallback(async (currentUser: User) => {
+        if (syncingRef.current) return;
+        syncingRef.current = true;
         setSyncing(true);
+
+        // Always read the freshest local events at call time, not from stale closure
+        const eventsToSync = readLocalEvents();
+
         try {
             // 1. Fetch remote events from Supabase
             const { data: remoteEvents, error: fetchError } = await supabase
@@ -47,11 +66,9 @@ export function useSync(
             const toDeleteRemoteIds: string[] = [];
             const mergedEvents: ChronicleEvent[] = [];
 
-            // Identify events to push to remote
+            // Push local events to remote where remote is missing or stale
             eventsToSync.forEach((localEv) => {
                 const remoteEv = remoteMap.get(localEv.id);
-                
-                // If remote doesn't have it, or it is newer, we prepare to upload
                 if (!remoteEv || new Date(localEv.createdAt) > new Date(remoteEv.created_at)) {
                     toUpsert.push({
                         id: localEv.id,
@@ -69,16 +86,15 @@ export function useSync(
                 mergedEvents.push(localEv);
             });
 
-            // Identify remote events missing locally — these were deleted locally, so delete them from remote too.
-            // We only propagate deletes after the first sync has initialised local state from remote.
+            // Pull remote events that aren't local, or propagate local deletes after first sync
             const hasEverSynced = hasInitialised.current;
             (remoteEvents as SupabaseEvent[] | null)?.forEach((remoteEv) => {
                 if (!localMap.has(remoteEv.id)) {
                     if (hasEverSynced) {
-                        // Local previously knew about this event and deleted it — propagate the delete.
+                        // Local previously knew about this — propagate the delete
                         toDeleteRemoteIds.push(remoteEv.id);
                     } else {
-                        // First-ever sync: pull remote events that aren't local yet.
+                        // First sync: pull events that exist remotely but not locally
                         mergedEvents.push({
                             id: remoteEv.id,
                             title: remoteEv.title,
@@ -94,7 +110,7 @@ export function useSync(
                 }
             });
 
-            // 2. Perform remote upsert
+            // 2. Upsert to remote
             if (toUpsert.length > 0) {
                 const { error: upsertError } = await supabase
                     .from("events")
@@ -102,7 +118,7 @@ export function useSync(
                 if (upsertError) throw upsertError;
             }
 
-            // 3. Propagate local deletes to remote
+            // 3. Delete remotely what was deleted locally
             if (toDeleteRemoteIds.length > 0) {
                 const { error: deleteError } = await supabase
                     .from("events")
@@ -111,33 +127,42 @@ export function useSync(
                 if (deleteError) throw deleteError;
             }
 
-            // 4. Update local state
-            setLocalEvents(mergedEvents);
+            // 4. Update local state only if the merged list differs from what's already stored
+            const currentLocal = readLocalEvents();
+            const mergedIds = new Set(mergedEvents.map((e) => e.id));
+            const currentIds = new Set(currentLocal.map((e) => e.id));
+            const changed =
+                mergedEvents.length !== currentLocal.length ||
+                [...mergedIds].some((id) => !currentIds.has(id));
+
+            if (changed) {
+                setLocalEvents(mergedEvents);
+            }
+
             hasInitialised.current = true;
-            
-            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             setLastSynced(timestamp);
+            localStorage.setItem("chronicle_last_synced", timestamp);
         } catch (e) {
             console.error("Synchronization failed:", e);
         } finally {
+            syncingRef.current = false;
             setSyncing(false);
         }
-    }, [syncing, setLocalEvents]);
+    }, [setLocalEvents]);
 
-    // Trigger sync automatically when user logs in or local event count changes
+    // Trigger sync when user logs in
     useEffect(() => {
         if (!user) return;
         Promise.resolve().then(() => {
-            performSync(user, localEvents);
+            performSync(user);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     // Force trigger manually
     const triggerSync = () => {
-        if (user) {
-            performSync(user, localEvents);
-        }
+        if (user) performSync(user);
     };
 
     return {

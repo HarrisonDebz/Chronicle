@@ -3,15 +3,8 @@ import { CircleHelp } from "lucide-react";
 import { getCategoryInfo } from "../utils/categories";
 import type { EventCategory } from "../types/Event";
 
-// Local cache for fetched SVGs to avoid multiple requests
-const svgCache: Record<string, string> = (() => {
-    try {
-        const stored = localStorage.getItem("chronicle_custom_icons");
-        return stored ? JSON.parse(stored) : {};
-    } catch {
-        return {};
-    }
-})();
+// In-memory cache for fetched SVGs to avoid duplicate requests within a session
+const svgCache: Record<string, string> = {};
 
 const pendingRequests: Record<string, Promise<string>> = {};
 
@@ -63,11 +56,6 @@ async function fetchIconSvg(query: string): Promise<string> {
                     .replace(/height="[^"]*"/, 'height="100%"');
                 
                 svgCache[cleanQuery] = processedSvg;
-                try {
-                    localStorage.setItem("chronicle_custom_icons", JSON.stringify(svgCache));
-                } catch (e) {
-                    console.error("LocalStorage write failed", e);
-                }
                 return processedSvg;
             }
             throw new Error("Invalid SVG content");

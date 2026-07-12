@@ -14,24 +14,13 @@ export function useAuth() {
 
     async function loadProfile() {
         try {
-            // First load from localStorage to be offline-first
-            const localName = localStorage.getItem("chronicle_profile_name") || "";
-            const localPhoto = localStorage.getItem("chronicle_profile_photo") || "";
-            
-            setProfile({ displayName: localName, photoUrl: localPhoto });
-
-            // Fetch from user metadata or profile table if available (metadata is easiest for simple accounts)
             const { data: { user: updatedUser }, error } = await supabase.auth.getUser();
             if (error) throw error;
 
             if (updatedUser?.user_metadata) {
                 const displayName = updatedUser.user_metadata.display_name || "";
                 const photoUrl = updatedUser.user_metadata.photo_url || "";
-                const newProfile = { displayName, photoUrl };
-                
-                setProfile(newProfile);
-                localStorage.setItem("chronicle_profile_name", displayName);
-                localStorage.setItem("chronicle_profile_photo", photoUrl);
+                setProfile({ displayName, photoUrl });
             }
         } catch (e) {
             console.error("Failed to load user profile details", e);
@@ -75,8 +64,6 @@ export function useAuth() {
             if (error) throw error;
 
             setProfile({ displayName, photoUrl });
-            localStorage.setItem("chronicle_profile_name", displayName);
-            localStorage.setItem("chronicle_profile_photo", photoUrl);
         } catch (e) {
             console.error("Failed to update profile", e);
             throw e;

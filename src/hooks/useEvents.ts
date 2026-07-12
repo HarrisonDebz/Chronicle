@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { v4 as uuid } from "uuid";
 
 import type {
@@ -5,14 +6,8 @@ import type {
     ChronicleEventInput,
 } from "../types/Event";
 
-import { useLocalStorage } from "./useLocalStorage";
-
 export function useEvents() {
-    const [events, setEvents] =
-        useLocalStorage<ChronicleEvent[]>(
-            "chronicle-events",
-            []
-        );
+    const [events, setEvents] = useState<ChronicleEvent[]>([]);
 
     function addEvent(event: ChronicleEventInput) {
         const newEvent: ChronicleEvent = {

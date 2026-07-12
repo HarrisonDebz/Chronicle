@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../config/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import type { ChronicleEvent, EventType, EventCategory } from "../types/Event";
@@ -22,9 +22,9 @@ export function useSync(
     setLocalEvents: (events: ChronicleEvent[]) => void
 ) {
     const [syncing, setSyncing] = useState(false);
-    const [lastSynced, setLastSynced] = useState<string | null>(() => {
-        return localStorage.getItem("chronicle_last_synced");
-    });
+    const [lastSynced, setLastSynced] = useState<string | null>(null);
+    // Tracks whether the first sync has completed this session
+    const hasInitialised = useRef(false);
 
     const performSync = useCallback(async (currentUser: User, eventsToSync: ChronicleEvent[]) => {
         if (syncing) return;
@@ -70,9 +70,8 @@ export function useSync(
             });
 
             // Identify remote events missing locally — these were deleted locally, so delete them from remote too.
-            // We only do this when local has been initialised (has at least been synced once),
-            // indicated by a previous lastSynced value stored in localStorage.
-            const hasEverSynced = !!localStorage.getItem("chronicle_last_synced");
+            // We only propagate deletes after the first sync has initialised local state from remote.
+            const hasEverSynced = hasInitialised.current;
             (remoteEvents as SupabaseEvent[] | null)?.forEach((remoteEv) => {
                 if (!localMap.has(remoteEv.id)) {
                     if (hasEverSynced) {
@@ -114,10 +113,10 @@ export function useSync(
 
             // 4. Update local state
             setLocalEvents(mergedEvents);
+            hasInitialised.current = true;
             
             const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             setLastSynced(timestamp);
-            localStorage.setItem("chronicle_last_synced", timestamp);
         } catch (e) {
             console.error("Synchronization failed:", e);
         } finally {

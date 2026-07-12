@@ -391,6 +391,7 @@ export default function Home() {
             />
 
             <ProfileSettingsModal
+                key={profileSettingsOpen ? `open-${profile.displayName}-${profile.photoUrl}` : "closed"}
                 open={profileSettingsOpen}
                 currentName={profile.displayName}
                 currentPhotoUrl={profile.photoUrl}

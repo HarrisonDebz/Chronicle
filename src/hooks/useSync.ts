@@ -44,6 +44,7 @@ export function useSync(
             eventsToSync.forEach((ev) => localMap.set(ev.id, ev));
 
             const toUpsert: SupabaseEvent[] = [];
+            const toDeleteRemoteIds: string[] = [];
             const mergedEvents: ChronicleEvent[] = [];
 
             // Identify events to push to remote
@@ -68,21 +69,29 @@ export function useSync(
                 mergedEvents.push(localEv);
             });
 
-            // Identify events to pull from remote
+            // Identify remote events missing locally — these were deleted locally, so delete them from remote too.
+            // We only do this when local has been initialised (has at least been synced once),
+            // indicated by a previous lastSynced value stored in localStorage.
+            const hasEverSynced = !!localStorage.getItem("chronicle_last_synced");
             (remoteEvents as SupabaseEvent[] | null)?.forEach((remoteEv) => {
                 if (!localMap.has(remoteEv.id)) {
-                    // Pull to local
-                    mergedEvents.push({
-                        id: remoteEv.id,
-                        title: remoteEv.title,
-                        description: remoteEv.description || undefined,
-                        type: remoteEv.type as EventType,
-                        date: remoteEv.date,
-                        category: remoteEv.category as EventCategory,
-                        customCategory: remoteEv.custom_category || undefined,
-                        recurring: remoteEv.recurring,
-                        createdAt: remoteEv.created_at,
-                    });
+                    if (hasEverSynced) {
+                        // Local previously knew about this event and deleted it — propagate the delete.
+                        toDeleteRemoteIds.push(remoteEv.id);
+                    } else {
+                        // First-ever sync: pull remote events that aren't local yet.
+                        mergedEvents.push({
+                            id: remoteEv.id,
+                            title: remoteEv.title,
+                            description: remoteEv.description || undefined,
+                            type: remoteEv.type as EventType,
+                            date: remoteEv.date,
+                            category: remoteEv.category as EventCategory,
+                            customCategory: remoteEv.custom_category || undefined,
+                            recurring: remoteEv.recurring,
+                            createdAt: remoteEv.created_at,
+                        });
+                    }
                 }
             });
 
@@ -94,7 +103,16 @@ export function useSync(
                 if (upsertError) throw upsertError;
             }
 
-            // 3. Update local state
+            // 3. Propagate local deletes to remote
+            if (toDeleteRemoteIds.length > 0) {
+                const { error: deleteError } = await supabase
+                    .from("events")
+                    .delete()
+                    .in("id", toDeleteRemoteIds);
+                if (deleteError) throw deleteError;
+            }
+
+            // 4. Update local state
             setLocalEvents(mergedEvents);
             
             const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

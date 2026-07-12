@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import {
     BarChart3,
-    CalendarDays,
     LayoutDashboard,
     Tags,
     TimerReset,
@@ -22,12 +21,6 @@ const navItems = [
         label: "Home",
         icon: LayoutDashboard,
         view: "dashboard" as AppView,
-        disabled: false,
-    },
-    {
-        label: "Calendar",
-        icon: CalendarDays,
-        view: "calendar" as AppView,
         disabled: false,
     },
     {

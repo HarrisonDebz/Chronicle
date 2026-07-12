@@ -5,7 +5,6 @@ import {
 } from "react";
 import AddEventModal from "../components/AddEventModal";
 import AppShell from "../components/AppShell";
-import CalendarView from "../components/CalendarView";
 import CategoryView from "../components/CategoryView";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import EmptyState from "../components/EmptyState";
@@ -75,11 +74,6 @@ export default function Home() {
 
     const [activeView, setActiveView] =
         useState<AppView>("dashboard");
-
-    const [
-        selectedCalendarDay,
-        setSelectedCalendarDay,
-    ] = useState<Date>(new Date());
 
     const [notifiedEventIds, setNotifiedEventIds] = useState<Set<string>>(new Set());
 
@@ -349,13 +343,6 @@ export default function Home() {
                         </div>
                     )}
                 </>
-            ) : activeView === "calendar" ? (
-                <CalendarView
-                    events={events}
-                    onView={setSelectedEvent}
-                    selectedDay={selectedCalendarDay}
-                    onSelectDay={setSelectedCalendarDay}
-                />
             ) : activeView === "journey" ? (
                 <JourneyView
                     events={events}

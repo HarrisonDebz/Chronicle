@@ -1,6 +1,5 @@
 import {
     BarChart3,
-    CalendarDays,
     ChevronLeft,
     ChevronRight,
     LayoutDashboard,
@@ -33,12 +32,6 @@ const navItems = [
         label: "Dashboard",
         icon: LayoutDashboard,
         view: "dashboard" as AppView,
-        disabled: false,
-    },
-    {
-        label: "Calendar",
-        icon: CalendarDays,
-        view: "calendar" as AppView,
         disabled: false,
     },
     {

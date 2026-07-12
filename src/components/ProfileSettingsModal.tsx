@@ -14,6 +14,7 @@ import {
 
 import {
     type FormEvent,
+    useRef,
     useState,
 } from "react";
 
@@ -36,14 +37,6 @@ interface Props {
     triggerSync: () => void;
 }
 
-const PRESET_AVATARS = [
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60",
-    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=60",
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60",
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=60",
-    "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=60",
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=60",
-];
 
 export default function ProfileSettingsModal({
     open,
@@ -61,9 +54,17 @@ export default function ProfileSettingsModal({
 }: Props) {
     const [name, setName] = useState(currentName);
     const [photoUrl, setPhotoUrl] = useState(currentPhotoUrl);
-    const [customPhotoInput, setCustomPhotoInput] = useState(false);
     const [error, setError] = useState("");
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { permission, requestPermission } = useNotifications();
+
+    function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => setPhotoUrl(reader.result as string);
+        reader.readAsDataURL(file);
+    }
 
     function handleSubmit(event: FormEvent) {
         event.preventDefault();
@@ -233,52 +234,51 @@ export default function ProfileSettingsModal({
 
                             {/* Profile Picture */}
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between ml-1">
-                                    <label className="block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
-                                        Profile Photo
-                                    </label>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCustomPhotoInput(!customPhotoInput)}
-                                        className="text-[10px] font-bold uppercase tracking-wide text-[var(--primary)] opacity-80 hover:opacity-100 transition"
-                                    >
-                                        {customPhotoInput ? "Use Preset" : "Custom URL"}
-                                    </button>
-                                </div>
+                                <label className="ml-1 block text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                                    Profile Photo
+                                </label>
 
-                                {customPhotoInput ? (
-                                    <input
-                                        value={photoUrl}
-                                        onChange={(event) => setPhotoUrl(event.target.value)}
-                                        placeholder="Paste a photo URL..."
-                                        className="
-                                            w-full
-                                            rounded-xl
-                                            border
-                                            border-[var(--border-strong)]
-                                            bg-[var(--surface-low)]
-                                            p-3
-                                            text-sm
-                                            text-[var(--text-main)]
-                                            outline-none
-                                            transition
-                                            focus:border-[var(--primary)]
-                                        "
-                                    />
-                                ) : (
-                                    <div className="grid grid-cols-6 gap-2">
-                                        {PRESET_AVATARS.map((url, i) => (
-                                            <button
-                                                key={i}
-                                                type="button"
-                                                onClick={() => setPhotoUrl(url)}
-                                                className={`h-11 w-11 rounded-xl overflow-hidden border-2 transition active:scale-95 ${photoUrl === url ? "border-[var(--primary)] scale-105" : "border-transparent opacity-70 hover:opacity-100"}`}
-                                            >
-                                                <img src={url} alt="Preset avatar" className="h-full w-full object-cover" />
-                                            </button>
-                                        ))}
+                                <div className="flex items-center gap-4">
+                                    <div className="relative h-16 w-16 flex-shrink-0">
+                                        {photoUrl ? (
+                                            <img
+                                                src={photoUrl}
+                                                alt="Profile"
+                                                className="h-full w-full rounded-2xl object-cover border-2 border-[var(--primary)]"
+                                            />
+                                        ) : (
+                                            <div className="flex h-full w-full items-center justify-center rounded-2xl bg-[rgba(192,193,255,0.12)] text-[var(--primary)]">
+                                                <UserRound size={28} />
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+
+                                    <div className="flex flex-1 flex-col gap-2">
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handlePhotoUpload}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-low)] px-4 py-2.5 text-sm font-semibold text-[var(--text-main)] hover:bg-[var(--surface-card-high)] transition active:scale-95"
+                                        >
+                                            Upload Photo
+                                        </button>
+                                        {photoUrl && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setPhotoUrl("")}
+                                                className="w-full rounded-xl px-4 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/10 transition"
+                                            >
+                                                Remove Photo
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Supabase Account & Sync Section */}

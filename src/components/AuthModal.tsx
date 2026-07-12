@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { type FormEvent, useState } from "react";
 import { supabase } from "../config/supabaseClient";
-import { KeyRound, Mail, User } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Mail, User } from "lucide-react";
 
 interface Props {
     open: boolean;
@@ -15,6 +15,7 @@ export default function AuthModal({
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [displayName, setDisplayName] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -230,7 +231,7 @@ export default function AuthModal({
 
                             <div className="relative">
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Password"
@@ -242,6 +243,7 @@ export default function AuthModal({
                                         bg-[var(--surface-low)]
                                         p-4
                                         pl-11
+                                        pr-12
                                         text-base
                                         font-semibold
                                         text-[var(--text-main)]
@@ -252,6 +254,14 @@ export default function AuthModal({
                                     "
                                 />
                                 <KeyRound size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
                         </div>
 

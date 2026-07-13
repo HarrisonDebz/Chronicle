@@ -4,6 +4,7 @@ import {
     PlusCircle,
     Save,
     Tag,
+    Bell,
 } from "lucide-react";
 
 import {
@@ -16,6 +17,7 @@ import type {
     ChronicleEventInput,
     EventCategory,
     EventType,
+    NotificationSetting,
 } from "../types/Event";
 
 interface Props {
@@ -96,6 +98,11 @@ export default function EventForm({
             initialEvent?.customCategory ?? ""
         );
 
+    const [notifyBefore, setNotifyBefore] =
+        useState<NotificationSetting>(
+            initialEvent?.notifyBefore ?? "none"
+        );
+
     const [error, setError] = useState("");
 
     function handleSubmit(
@@ -139,6 +146,10 @@ export default function EventForm({
 
             recurring:
                 initialEvent?.recurring ?? false,
+
+            notifyBefore: type === "countup"
+                ? (notifyBefore === "on-day" ? "on-day" : "none")
+                : notifyBefore,
         });
     }
 
@@ -463,6 +474,82 @@ export default function EventForm({
                         />
                     </div>
                 </div>
+            </div>
+
+            <div className="space-y-2 border-t border-[var(--border-soft)] pt-4">
+                {type === "countdown" ? (
+                    <div className="space-y-2">
+                        <label className="ml-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--text-soft)]">
+                            <Bell size={14} className="text-[var(--primary)]" />
+                            Remind Me Before Event
+                        </label>
+                        <div className="relative">
+                            <select
+                                value={notifyBefore}
+                                onChange={(event) =>
+                                    setNotifyBefore(event.target.value as NotificationSetting)
+                                }
+                                className="
+                                    w-full
+                                    appearance-none
+                                    rounded-xl
+                                    border
+                                    border-[var(--border-strong)]
+                                    bg-[var(--surface-low)]
+                                    p-4
+                                    text-[var(--text-main)]
+                                    outline-none
+                                    transition
+                                    focus:border-[var(--primary)]
+                                    focus:ring-2
+                                    focus:ring-[rgba(192,193,255,0.24)]
+                                "
+                            >
+                                <option value="none">No reminder</option>
+                                <option value="on-day">On the day (at 9:00 AM)</option>
+                                <option value="1-day">1 day before</option>
+                                <option value="1-hour">1 hour before</option>
+                                <option value="15-min">15 minutes before</option>
+                            </select>
+                            <ChevronDown
+                                size={20}
+                                className="
+                                    pointer-events-none
+                                    absolute
+                                    right-4
+                                    top-1/2
+                                    -translate-y-1/2
+                                    text-[var(--text-muted)]
+                                "
+                            />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-between rounded-xl border border-[var(--border-strong)] bg-[var(--surface-low)] p-4 mt-2">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${notifyBefore === 'on-day' ? 'bg-green-500/10 text-green-400' : 'bg-[var(--surface-card-high)] text-[var(--text-muted)]'}`}>
+                                <Bell size={18} />
+                            </div>
+                            <div>
+                                <p className="font-semibold text-sm text-[var(--text-main)]">Anniversary Reminder</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                                    Notify me every year on this day
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setNotifyBefore(prev => prev === 'on-day' ? 'none' : 'on-day')}
+                            className={`px-4 py-2 text-xs font-bold rounded-xl border transition active:scale-95 ${
+                                notifyBefore === 'on-day'
+                                    ? 'bg-green-500/20 border-green-500/30 text-green-300 hover:bg-green-500/30'
+                                    : 'bg-[var(--surface-card-high)] border-[var(--border-strong)] text-[var(--text-muted)] hover:brightness-110'
+                            }`}
+                        >
+                            {notifyBefore === 'on-day' ? 'Enabled' : 'Disabled'}
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="flex flex-col items-center justify-end gap-3 pt-2 sm:flex-row">

@@ -70,41 +70,15 @@ export default function Home() {
     const [authModalOpen, setAuthModalOpen] = useState(false);
 
     const { addToast } = useToast();
-    const { sendNotification, permission } = useNotifications();
+    const { scheduleNotifications } = useNotifications();
 
     const [activeView, setActiveView] =
         useState<AppView>("dashboard");
 
-    const [notifiedEventIds, setNotifiedEventIds] = useState<Set<string>>(new Set());
-
-    // Notification check interval
+    // Schedule and sync notifications
     useEffect(() => {
-        if (permission !== 'granted' || events.length === 0) return;
-
-        const checkUpcomingEvents = () => {
-            const now = new Date();
-
-            events.forEach(event => {
-                if (notifiedEventIds.has(event.id)) return;
-
-                const eventDate = new Date(event.date);
-                const timeDiff = eventDate.getTime() - now.getTime();
-
-                // If it's a countdown and starts within 24h but is still in the future
-                if (event.type === 'countdown' && timeDiff > 0 && timeDiff <= 24 * 60 * 60 * 1000) {
-                    sendNotification(`Upcoming: ${event.title}`, {
-                        body: `Starts in less than 24 hours.`,
-                    });
-                    setNotifiedEventIds(prev => new Set(prev).add(event.id));
-                }
-            });
-        };
-
-        checkUpcomingEvents();
-        const intervalId = setInterval(checkUpcomingEvents, 60 * 60 * 1000); // Check every hour
-
-        return () => clearInterval(intervalId);
-    }, [events, permission, notifiedEventIds, sendNotification]);
+        scheduleNotifications(events);
+    }, [events, scheduleNotifications]);
 
 
     const [filters, setFilters] =

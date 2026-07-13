@@ -31,10 +31,12 @@ export function useEvents() {
     }
 
     function addEvent(event: ChronicleEventInput) {
+        const now = new Date().toISOString();
         const newEvent: ChronicleEvent = {
             ...event,
             id: uuid(),
-            createdAt: new Date().toISOString(),
+            createdAt: now,
+            updatedAt: now,
         };
 
         setEventsState((currentEvents) => [
@@ -44,11 +46,13 @@ export function useEvents() {
     }
 
     function updateEvent(updatedEvent: ChronicleEvent) {
+        const stamped: ChronicleEvent = {
+            ...updatedEvent,
+            updatedAt: new Date().toISOString(),
+        };
         setEventsState((currentEvents) =>
             currentEvents.map((event) =>
-                event.id === updatedEvent.id
-                    ? updatedEvent
-                    : event
+                event.id === stamped.id ? stamped : event
             )
         );
     }

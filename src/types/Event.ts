@@ -10,6 +10,8 @@ export type EventCategory =
     | "goal"
     | "other";
 
+export type NotificationSetting = "none" | "on-day" | "1-day" | "1-hour" | "15-min";
+
 export interface ChronicleEvent {
     id: string;
     title: string;
@@ -26,6 +28,8 @@ export interface ChronicleEvent {
 
     recurring: boolean;
 
+    notifyBefore?: NotificationSetting;
+
     createdAt: string;
 
     /** ISO timestamp of the most recent edit — used for sync conflict resolution */
@@ -35,4 +39,4 @@ export interface ChronicleEvent {
 export type ChronicleEventInput = Omit<
     ChronicleEvent,
     "id" | "createdAt"
->;
+>;

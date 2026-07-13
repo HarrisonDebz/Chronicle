@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../config/supabaseClient";
 import type { User } from "@supabase/supabase-js";
-import type { ChronicleEvent, EventType, EventCategory } from "../types/Event";
+import type { ChronicleEvent, EventType, EventCategory, NotificationSetting } from "../types/Event";
 
 const STORAGE_KEY = "chronicle_events";
 // Durable set of IDs that were present the last time we synced.
@@ -19,6 +19,7 @@ interface SupabaseEvent {
     category: string;
     custom_category: string | null;
     recurring: boolean;
+    notify_before: string | null;
     created_at: string;
     updated_at: string | null;
 }
@@ -221,6 +222,7 @@ function toSupabaseRow(ev: ChronicleEvent, userId: string): SupabaseEvent {
         category: ev.category,
         custom_category: ev.customCategory || null,
         recurring: ev.recurring,
+        notify_before: ev.notifyBefore || null,
         created_at: ev.createdAt,
         updated_at: ev.updatedAt ?? ev.createdAt,
     };
@@ -236,6 +238,7 @@ function toLocalEvent(remote: SupabaseEvent): ChronicleEvent {
         category: remote.category as EventCategory,
         customCategory: remote.custom_category || undefined,
         recurring: remote.recurring,
+        notifyBefore: (remote.notify_before as NotificationSetting) || undefined,
         createdAt: remote.created_at,
         updatedAt: remote.updated_at ?? remote.created_at,
     };

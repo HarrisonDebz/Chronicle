@@ -4,6 +4,7 @@ import {
     CalendarClock,
     Pencil,
     Trash2,
+    Bell,
 } from "lucide-react";
 
 import type { ChronicleEvent } from "../types/Event";
@@ -179,6 +180,45 @@ export default function EventDetailsModal({
                                 {formatEventDateTime(
                                     event.date
                                 )}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        className="
+              mt-3
+              flex
+              items-center
+              gap-3
+              rounded-xl
+              border
+              border-[var(--border-soft)]
+              bg-[var(--surface-low)]
+              p-4
+            "
+                    >
+                        <Bell
+                            size={20}
+                            className="text-[var(--primary)]"
+                        />
+
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                                Notification
+                            </p>
+
+                            <p className="mt-1 font-semibold text-[var(--text-main)]">
+                                {event.notifyBefore === "none" || !event.notifyBefore
+                                    ? "Off"
+                                    : event.notifyBefore === "on-day"
+                                    ? event.type === "countup"
+                                        ? "Anniversary Reminder"
+                                        : "On the day"
+                                    : event.notifyBefore === "1-day"
+                                    ? "1 day before"
+                                    : event.notifyBefore === "1-hour"
+                                    ? "1 hour before"
+                                    : "15 minutes before"}
                             </p>
                         </div>
                     </div>

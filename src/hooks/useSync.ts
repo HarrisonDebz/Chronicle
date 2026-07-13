@@ -4,6 +4,10 @@ import type { User } from "@supabase/supabase-js";
 import type { ChronicleEvent, EventType, EventCategory } from "../types/Event";
 
 const STORAGE_KEY = "chronicle_events";
+// Durable set of IDs that were present the last time we synced.
+// Used to distinguish "remote event I haven't downloaded yet" from
+// "event I deleted locally and want to propagate to the server".
+const SYNCED_IDS_KEY = "chronicle_synced_ids";
 
 interface SupabaseEvent {
     id: string;
@@ -16,6 +20,7 @@ interface SupabaseEvent {
     custom_category: string | null;
     recurring: boolean;
     created_at: string;
+    updated_at: string | null;
 }
 
 function readLocalEvents(): ChronicleEvent[] {
@@ -27,6 +32,31 @@ function readLocalEvents(): ChronicleEvent[] {
     }
 }
 
+/** The set of event IDs that were confirmed synced in the previous session */
+function readSyncedIds(): Set<string> {
+    try {
+        const raw = localStorage.getItem(SYNCED_IDS_KEY);
+        return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+    } catch {
+        return new Set();
+    }
+}
+
+function writeSyncedIds(ids: Set<string>) {
+    localStorage.setItem(SYNCED_IDS_KEY, JSON.stringify([...ids]));
+}
+
+/** Returns whichever ISO string is later, falling back gracefully */
+function latestTimestamp(...timestamps: (string | null | undefined)[]): Date {
+    let best = new Date(0);
+    for (const ts of timestamps) {
+        if (!ts) continue;
+        const d = new Date(ts);
+        if (!isNaN(d.getTime()) && d > best) best = d;
+    }
+    return best;
+}
+
 export function useSync(
     user: User | null,
     _localEvents: ChronicleEvent[],
@@ -36,8 +66,6 @@ export function useSync(
     const [lastSynced, setLastSynced] = useState<string | null>(() =>
         localStorage.getItem("chronicle_last_synced")
     );
-    // Tracks whether the first sync has completed this session
-    const hasInitialised = useRef(false);
     const syncingRef = useRef(false);
 
     const performSync = useCallback(async (currentUser: User) => {
@@ -45,11 +73,12 @@ export function useSync(
         syncingRef.current = true;
         setSyncing(true);
 
-        // Always read the freshest local events at call time, not from stale closure
+        // Always read the freshest local events and the durable synced-IDs set
         const eventsToSync = readLocalEvents();
+        const previouslySyncedIds = readSyncedIds();
 
         try {
-            // 1. Fetch remote events from Supabase
+            // 1. Fetch all remote events for this user
             const { data: remoteEvents, error: fetchError } = await supabase
                 .from("events")
                 .select("*");
@@ -57,7 +86,9 @@ export function useSync(
             if (fetchError) throw fetchError;
 
             const remoteMap = new Map<string, SupabaseEvent>();
-            (remoteEvents as SupabaseEvent[] | null)?.forEach((ev) => remoteMap.set(ev.id, ev));
+            (remoteEvents as SupabaseEvent[] | null)?.forEach((ev) =>
+                remoteMap.set(ev.id, ev)
+            );
 
             const localMap = new Map<string, ChronicleEvent>();
             eventsToSync.forEach((ev) => localMap.set(ev.id, ev));
@@ -66,51 +97,47 @@ export function useSync(
             const toDeleteRemoteIds: string[] = [];
             const mergedEvents: ChronicleEvent[] = [];
 
-            // Push local events to remote where remote is missing or stale
+            // ── Pass 1: Walk local events ────────────────────────────────────
             eventsToSync.forEach((localEv) => {
                 const remoteEv = remoteMap.get(localEv.id);
-                if (!remoteEv || new Date(localEv.createdAt) > new Date(remoteEv.created_at)) {
-                    toUpsert.push({
-                        id: localEv.id,
-                        user_id: currentUser.id,
-                        title: localEv.title,
-                        description: localEv.description || null,
-                        type: localEv.type,
-                        date: localEv.date,
-                        category: localEv.category,
-                        custom_category: localEv.customCategory || null,
-                        recurring: localEv.recurring,
-                        created_at: localEv.createdAt,
-                    });
+
+                if (!remoteEv) {
+                    // Not on server yet — push it up
+                    toUpsert.push(toSupabaseRow(localEv, currentUser.id));
+                    mergedEvents.push(localEv);
+                    return;
                 }
-                mergedEvents.push(localEv);
+
+                // Conflict resolution: compare the most-recent timestamp on each side
+                const localTime = latestTimestamp(localEv.updatedAt, localEv.createdAt);
+                const remoteTime = latestTimestamp(remoteEv.updated_at, remoteEv.created_at);
+
+                if (localTime >= remoteTime) {
+                    // Local is newer (or same) — push local version up
+                    toUpsert.push(toSupabaseRow(localEv, currentUser.id));
+                    mergedEvents.push(localEv);
+                } else {
+                    // Remote is newer — pull remote version down
+                    mergedEvents.push(toLocalEvent(remoteEv));
+                }
             });
 
-            // Pull remote events that aren't local, or propagate local deletes after first sync
-            const hasEverSynced = hasInitialised.current;
+            // ── Pass 2: Walk remote events ───────────────────────────────────
             (remoteEvents as SupabaseEvent[] | null)?.forEach((remoteEv) => {
-                if (!localMap.has(remoteEv.id)) {
-                    if (hasEverSynced) {
-                        // Local previously knew about this — propagate the delete
-                        toDeleteRemoteIds.push(remoteEv.id);
-                    } else {
-                        // First sync: pull events that exist remotely but not locally
-                        mergedEvents.push({
-                            id: remoteEv.id,
-                            title: remoteEv.title,
-                            description: remoteEv.description || undefined,
-                            type: remoteEv.type as EventType,
-                            date: remoteEv.date,
-                            category: remoteEv.category as EventCategory,
-                            customCategory: remoteEv.custom_category || undefined,
-                            recurring: remoteEv.recurring,
-                            createdAt: remoteEv.created_at,
-                        });
-                    }
+                if (localMap.has(remoteEv.id)) return; // already handled above
+
+                if (previouslySyncedIds.has(remoteEv.id)) {
+                    // This ID was in our last known synced set but is now missing
+                    // locally → the user deleted it on this device. Propagate delete.
+                    toDeleteRemoteIds.push(remoteEv.id);
+                } else {
+                    // Brand-new remote event (e.g. added on another device, or
+                    // first-time sign-in on this device). Pull it down.
+                    mergedEvents.push(toLocalEvent(remoteEv));
                 }
             });
 
-            // 2. Upsert to remote
+            // ── 2. Upsert local-wins events to remote ────────────────────────
             if (toUpsert.length > 0) {
                 const { error: upsertError } = await supabase
                     .from("events")
@@ -118,7 +145,7 @@ export function useSync(
                 if (upsertError) throw upsertError;
             }
 
-            // 3. Delete remotely what was deleted locally
+            // ── 3. Propagate local deletes to remote ─────────────────────────
             if (toDeleteRemoteIds.length > 0) {
                 const { error: deleteError } = await supabase
                     .from("events")
@@ -127,20 +154,29 @@ export function useSync(
                 if (deleteError) throw deleteError;
             }
 
-            // 4. Update local state only if the merged list differs from what's already stored
+            // ── 4. Update local state only when the merged list actually differs
             const currentLocal = readLocalEvents();
             const mergedIds = new Set(mergedEvents.map((e) => e.id));
             const currentIds = new Set(currentLocal.map((e) => e.id));
             const changed =
                 mergedEvents.length !== currentLocal.length ||
-                [...mergedIds].some((id) => !currentIds.has(id));
+                [...mergedIds].some((id) => !currentIds.has(id)) ||
+                mergedEvents.some((me) => {
+                    const local = currentLocal.find((l) => l.id === me.id);
+                    return local?.updatedAt !== me.updatedAt;
+                });
 
             if (changed) {
                 setLocalEvents(mergedEvents);
             }
 
-            hasInitialised.current = true;
-            const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            // ── 5. Persist the durable synced-IDs set for next session ────────
+            writeSyncedIds(mergedIds);
+
+            const timestamp = new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
             setLastSynced(timestamp);
             localStorage.setItem("chronicle_last_synced", timestamp);
         } catch (e) {
@@ -160,7 +196,7 @@ export function useSync(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
-    // Force trigger manually
+    // Manual trigger
     const triggerSync = () => {
         if (user) performSync(user);
     };
@@ -169,5 +205,38 @@ export function useSync(
         syncing,
         lastSynced,
         triggerSync,
+    };
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function toSupabaseRow(ev: ChronicleEvent, userId: string): SupabaseEvent {
+    return {
+        id: ev.id,
+        user_id: userId,
+        title: ev.title,
+        description: ev.description || null,
+        type: ev.type,
+        date: ev.date,
+        category: ev.category,
+        custom_category: ev.customCategory || null,
+        recurring: ev.recurring,
+        created_at: ev.createdAt,
+        updated_at: ev.updatedAt ?? ev.createdAt,
+    };
+}
+
+function toLocalEvent(remote: SupabaseEvent): ChronicleEvent {
+    return {
+        id: remote.id,
+        title: remote.title,
+        description: remote.description || undefined,
+        type: remote.type as EventType,
+        date: remote.date,
+        category: remote.category as EventCategory,
+        customCategory: remote.custom_category || undefined,
+        recurring: remote.recurring,
+        createdAt: remote.created_at,
+        updatedAt: remote.updated_at ?? remote.created_at,
     };
 }

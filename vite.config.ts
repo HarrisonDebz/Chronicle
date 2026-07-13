@@ -8,6 +8,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       includeAssets: ['app-icon.png', 'pwa-icon-32.png', 'pwa-icon-192.png', 'pwa-icon-512.png'],
       manifest: {

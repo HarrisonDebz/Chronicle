@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { type FormEvent, useState } from "react";
 import { supabase } from "../config/supabaseClient";
-import { Eye, EyeOff, KeyRound, Mail, User } from "lucide-react";
+import { CheckCircle, Eye, EyeOff, KeyRound, Mail, RefreshCw, User } from "lucide-react";
 
 interface Props {
     open: boolean;
@@ -19,6 +19,8 @@ export default function AuthModal({
     const [displayName, setDisplayName] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(false);
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
@@ -39,10 +41,11 @@ export default function AuthModal({
 
         try {
             if (isSignUp) {
-                const { error: signUpError } = await supabase.auth.signUp({
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
                     email: email.trim(),
                     password: password.trim(),
                     options: {
+                        emailRedirectTo: window.location.origin,
                         data: {
                             display_name: displayName.trim(),
                             photo_url: "",
@@ -50,14 +53,21 @@ export default function AuthModal({
                     }
                 });
                 if (signUpError) throw signUpError;
+                // Supabase returns an empty identities array (instead of an error) when
+                // email confirmation is on and the address is already registered.
+                if (signUpData.user && signUpData.user.identities?.length === 0) {
+                    throw new Error("An account with this email already exists. Please sign in instead.");
+                }
+                // Show the "check your email" screen instead of logging in immediately
+                setAwaitingConfirmation(true);
             } else {
                 const { error: signInError } = await supabase.auth.signInWithPassword({
                     email: email.trim(),
                     password: password.trim(),
                 });
                 if (signInError) throw signInError;
+                onSuccess();
             }
-            onSuccess();
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "An error occurred during authentication.";
             setError(message);
@@ -85,7 +95,112 @@ export default function AuthModal({
                         backdrop-blur-md
                     "
                 >
+                    <AnimatePresence mode="wait">
+                    {awaitingConfirmation ? (
+                        /* ── Confirmation email sent screen ── */
+                        <motion.div
+                            key="confirm"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-live="polite"
+                            initial={{ opacity: 0, scale: 0.96, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96, y: 20 }}
+                            className="glass-card w-full max-w-md rounded-2xl p-8 shadow-2xl text-center"
+                        >
+                            {/* Animated envelope / check icon */}
+                            <motion.div
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: "spring", delay: 0.15, stiffness: 200 }}
+                                className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[var(--future-strong)]/15 ring-2 ring-[var(--future-strong)]/30"
+                            >
+                                <Mail size={36} className="text-[var(--future-strong)]" />
+                                <motion.span
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ delay: 0.4, type: "spring", stiffness: 260 }}
+                                    className="absolute -mt-8 ml-8"
+                                >
+                                    <CheckCircle size={20} className="text-emerald-400" />
+                                </motion.span>
+                            </motion.div>
+
+                            <h2 className="text-2xl font-bold text-[var(--text-main)]">Check your email</h2>
+
+                            <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
+                                A confirmation link has been sent to{" "}
+                                <span className="font-semibold text-[var(--future)]">{email}</span>.
+                                Click the link in the email to activate your account and sign in.
+                            </p>
+
+                            <p className="mt-2 text-xs text-[var(--text-muted)]/60">
+                                Didn't receive it? Check your spam folder, or resend below.
+                            </p>
+
+                            {/* Resend button */}
+                            <button
+                                type="button"
+                                disabled={resendCooldown}
+                                onClick={async () => {
+                                    setResendCooldown(true);
+                                    await supabase.auth.resend({
+                                        type: "signup",
+                                        email: email.trim(),
+                                        options: { emailRedirectTo: window.location.origin },
+                                    });
+                                    setTimeout(() => setResendCooldown(false), 30_000);
+                                }}
+                                className="
+                                    orange-glow
+                                    mt-6
+                                    inline-flex
+                                    items-center
+                                    gap-2
+                                    rounded-xl
+                                    bg-[var(--future-strong)]
+                                    px-6
+                                    py-3
+                                    font-bold
+                                    text-[#2a1000]
+                                    transition
+                                    hover:brightness-110
+                                    active:scale-95
+                                    disabled:opacity-40
+                                "
+                            >
+                                <RefreshCw size={16} className={resendCooldown ? "animate-spin" : ""} />
+                                {resendCooldown ? "Email sent!" : "Resend confirmation email"}
+                            </button>
+
+                            {/* Back to sign-in link */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setAwaitingConfirmation(false);
+                                    setIsSignUp(false);
+                                    setPassword("");
+                                    setError("");
+                                }}
+                                className="
+                                    mt-4
+                                    block
+                                    w-full
+                                    text-center
+                                    text-sm
+                                    font-semibold
+                                    text-[var(--primary)]
+                                    opacity-80
+                                    transition
+                                    hover:opacity-100
+                                "
+                            >
+                                Back to Sign In
+                            </button>
+                        </motion.div>
+                    ) : (
                     <motion.form
+                        key="form"
                         role="dialog"
                         aria-modal="true"
                         onSubmit={handleSubmit}
@@ -305,6 +420,8 @@ export default function AuthModal({
                             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
                         </button>
                     </motion.form>
+                    )}
+                    </AnimatePresence>
                 </motion.div>
             )}
         </AnimatePresence>

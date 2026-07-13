@@ -27,6 +27,9 @@ export interface ChronicleEvent {
     recurring: boolean;
 
     createdAt: string;
+
+    /** ISO timestamp of the most recent edit — used for sync conflict resolution */
+    updatedAt?: string;
 }
 
 export type ChronicleEventInput = Omit<

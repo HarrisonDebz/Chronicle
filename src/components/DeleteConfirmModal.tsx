@@ -31,7 +31,7 @@ export default function DeleteConfirmModal({
                         flex
                         items-center
                         justify-center
-                        bg-[rgba(6,14,32,0.82)]
+                        bg-[var(--modal-backdrop)]
                         px-4
                         backdrop-blur-md
                     "

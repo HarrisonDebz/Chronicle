@@ -3,6 +3,7 @@
 
 :root {
     font-family: "Geist", system-ui, sans-serif;
+    color-scheme: dark;
 
     --background: #0b1326;
     --surface: #0f172a;
@@ -25,6 +26,65 @@
 
     --border-soft: rgba(199, 196, 215, 0.16);
     --border-strong: rgba(199, 196, 215, 0.28);
+
+    /* Newly introduced variables for theme consistency */
+    --glass-bg: rgba(23, 31, 51, 0.74);
+    --overlay-primary: rgba(192, 193, 255, 0.12);
+    --overlay-primary-hover: rgba(192, 193, 255, 0.2);
+    --overlay-primary-ring: rgba(192, 193, 255, 0.24);
+    --modal-backdrop: rgba(6, 14, 32, 0.84);
+    
+    --mobile-header-bg: rgba(11, 19, 38, 0.84);
+    --card-hover: rgba(23, 31, 51, 0.9);
+    
+    --calendar-day-active: rgba(19, 27, 46, 0.72);
+    --calendar-day-inactive: rgba(6, 14, 32, 0.38);
+    
+    --placeholder-text: rgba(199, 196, 215, 0.32);
+    --radial-1: rgba(128, 131, 255, 0.12);
+    --radial-2: rgba(249, 115, 22, 0.08);
+}
+
+.light {
+    color-scheme: light;
+    --background: #f4f6fa;
+    --surface: #ffffff;
+    --surface-low: #f8fafc;
+    --surface-card: #ffffff;
+    --surface-card-high: #e2e8f0;
+
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-soft: #475569;
+
+    --primary: #4f46e5;
+    --primary-strong: #4338ca;
+
+    --future: #ea580c;
+    --future-strong: #f97316;
+
+    --memory: #0d9488;
+    --memory-strong: #16a34a;
+
+    --border-soft: rgba(15, 23, 42, 0.08);
+    --border-strong: rgba(15, 23, 42, 0.15);
+
+    /* Light mode overrides */
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --overlay-primary: rgba(79, 70, 229, 0.08);
+    --overlay-primary-hover: rgba(79, 70, 229, 0.15);
+    --overlay-primary-ring: rgba(79, 70, 229, 0.2);
+    --modal-backdrop: rgba(15, 23, 42, 0.4);
+    
+    --mobile-header-bg: rgba(244, 246, 250, 0.84);
+    --card-hover: rgba(226, 232, 240, 0.6);
+    
+    --calendar-day-active: rgba(255, 255, 255, 0.9);
+    --calendar-day-inactive: rgba(226, 232, 240, 0.3);
+    
+    --placeholder-text: rgba(15, 23, 42, 0.35);
+    --radial-1: rgba(79, 70, 229, 0.06);
+    --radial-2: rgba(249, 115, 22, 0.04);
 }
 
 * {
@@ -39,8 +99,8 @@ body {
     margin: 0;
     min-height: 100vh;
     background:
-        radial-gradient(circle at 30% 10%, rgba(128, 131, 255, 0.12), transparent 30%),
-        radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.08), transparent 28%),
+        radial-gradient(circle at 30% 10%, var(--radial-1), transparent 30%),
+        radial-gradient(circle at 80% 20%, var(--radial-2), transparent 28%),
         var(--background);
     color: var(--text-main);
 }
@@ -63,7 +123,7 @@ button {
 }
 
 .glass-card {
-    background: rgba(23, 31, 51, 0.74);
+    background: var(--glass-bg);
     backdrop-filter: blur(14px);
     border: 1px solid var(--border-soft);
 }

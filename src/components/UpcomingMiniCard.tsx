@@ -37,7 +37,7 @@ export default function UpcomingMiniCard({
         p-6
         transition
         hover:border-[var(--future)]
-        hover:bg-[rgba(23,31,51,0.9)]
+        hover:bg-[var(--card-hover)]
       "
         >
             <div className="mb-8 flex items-start justify-between">

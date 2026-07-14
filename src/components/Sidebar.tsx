@@ -8,7 +8,11 @@ import {
     Tags,
     TimerReset,
     UserRound,
+    Sun,
+    Moon,
 } from "lucide-react";
+
+import { useTheme } from "../context/ThemeContext";
 
 import { APP_VERSION } from "../config/app";
 
@@ -64,6 +68,8 @@ export default function Sidebar({
     onOpenProfile,
     onViewChange,
 }: Props) {
+    const { theme, toggleTheme } = useTheme();
+
     return (
         <aside
             className={`
@@ -261,6 +267,59 @@ export default function Sidebar({
 
                 <button
                     type="button"
+                    onClick={toggleTheme}
+                    aria-label="Toggle Theme"
+                    className={`
+            flex
+            w-full
+            items-center
+            gap-3
+            rounded-xl
+            border
+            border-[var(--border-soft)]
+            bg-[var(--surface-card)]
+            p-3
+            text-left
+            transition
+            hover:border-[var(--primary)]
+            hover:bg-[var(--surface-card-high)]
+            ${collapsed
+                            ? "justify-center"
+                            : ""
+                        }
+          `}
+                >
+                    <div
+                        className="
+                  flex
+                  h-9
+                  w-9
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[var(--overlay-primary)]
+                  text-[var(--primary)]
+                "
+                    >
+                        {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+                    </div>
+
+                    {!collapsed && (
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-bold text-[var(--text-main)]">
+                                {theme === "light" ? "Dark Mode" : "Light Mode"}
+                            </p>
+
+                            <p className="text-xs text-[var(--text-muted)]">
+                                Switch appearance
+                            </p>
+                        </div>
+                    )}
+                </button>
+
+                <button
+                    type="button"
                     onClick={onOpenProfile}
                     aria-label="Profile Settings"
                     className={`
@@ -299,7 +358,7 @@ export default function Sidebar({
                   items-center
                   justify-center
                   rounded-full
-                  bg-[rgba(192,193,255,0.12)]
+                  bg-[var(--overlay-primary)]
                   text-[var(--primary)]
                 "
                         >

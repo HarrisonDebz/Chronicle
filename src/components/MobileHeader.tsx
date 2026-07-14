@@ -1,7 +1,11 @@
 import {
     Plus,
     UserRound,
+    Sun,
+    Moon,
 } from "lucide-react";
+
+import { useTheme } from "../context/ThemeContext";
 
 interface Props {
     onAddEvent: () => void;
@@ -14,6 +18,8 @@ export default function MobileHeader({
     onOpenProfile,
     profilePhotoUrl,
 }: Props) {
+    const { theme, toggleTheme } = useTheme();
+
     return (
         <header
             className="
@@ -28,7 +34,7 @@ export default function MobileHeader({
         justify-between
         border-b
         border-[var(--border-soft)]
-        bg-[rgba(11,19,38,0.84)]
+        bg-[var(--mobile-header-bg)]
         px-4
         backdrop-blur-md
         md:hidden
@@ -53,6 +59,24 @@ export default function MobileHeader({
             </div>
 
             <div className="flex items-center gap-3">
+                <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="
+            rounded-full
+            border
+            border-[var(--border-soft)]
+            bg-[var(--surface-card)]
+            p-2
+            text-[var(--primary)]
+            transition
+            active:scale-95
+          "
+                    aria-label="Toggle theme"
+                >
+                    {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+                </button>
+
                 <button
                     type="button"
                     onClick={onOpenProfile}

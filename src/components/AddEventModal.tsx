@@ -66,7 +66,7 @@ export default function AddEventModal({
                         flex
                         items-end
                         justify-center
-                        bg-[rgba(6,14,32,0.82)]
+                        bg-[var(--modal-backdrop)]
                         backdrop-blur-md
                         sm:items-center
                         sm:px-4

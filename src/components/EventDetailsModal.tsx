@@ -60,7 +60,7 @@ export default function EventDetailsModal({
                         flex
                         items-center
                         justify-center
-                        bg-[rgba(6,14,32,0.84)]
+                        bg-[var(--modal-backdrop)]
                         px-4
                         py-8
                         backdrop-blur-md

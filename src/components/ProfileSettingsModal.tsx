@@ -97,7 +97,7 @@ export default function ProfileSettingsModal({
                         flex
                         items-center
                         justify-center
-                        bg-[rgba(6,14,32,0.84)]
+                        bg-[var(--modal-backdrop)]
                         px-4
                         py-8
                         backdrop-blur-md
@@ -157,7 +157,7 @@ export default function ProfileSettingsModal({
                             items-center
                             justify-center
                             rounded-2xl
-                            bg-[rgba(192,193,255,0.12)]
+                            bg-[var(--overlay-primary)]
                             text-[var(--primary)]
                             "
                                     >
@@ -226,7 +226,7 @@ export default function ProfileSettingsModal({
                         text-[var(--text-main)]
                         outline-none
                         transition
-                        placeholder:text-[rgba(199,196,215,0.32)]
+                        placeholder:text-[var(--placeholder-text)]
                         focus:border-[var(--primary)]
                     "
                                 />
@@ -247,7 +247,7 @@ export default function ProfileSettingsModal({
                                                 className="h-full w-full rounded-2xl object-cover border-2 border-[var(--primary)]"
                                             />
                                         ) : (
-                                            <div className="flex h-full w-full items-center justify-center rounded-2xl bg-[rgba(192,193,255,0.12)] text-[var(--primary)]">
+                                            <div className="flex h-full w-full items-center justify-center rounded-2xl bg-[var(--overlay-primary)] text-[var(--primary)]">
                                                 <UserRound size={28} />
                                             </div>
                                         )}

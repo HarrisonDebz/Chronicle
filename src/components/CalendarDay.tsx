@@ -57,8 +57,8 @@ export default function CalendarDay({
         sm:min-h-28
         sm:p-3
         ${belongsToMonth
-                    ? "bg-[rgba(19,27,46,0.72)]"
-                    : "bg-[rgba(6,14,32,0.38)] opacity-45"
+                    ? "bg-[var(--calendar-day-active)]"
+                    : "bg-[var(--calendar-day-inactive)] opacity-45"
                 }
         ${selected
                     ? "z-10 ring-2 ring-inset ring-[var(--primary)]"

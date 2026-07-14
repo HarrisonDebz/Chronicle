@@ -59,7 +59,7 @@ export default function JourneyView({
             items-center
             justify-center
             rounded-2xl
-            bg-[rgba(192,193,255,0.1)]
+            bg-[var(--overlay-primary)]
             text-[var(--primary)]
           "
                 >

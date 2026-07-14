@@ -110,7 +110,7 @@ export default function MobileBottomNav({
                         {active && (
                             <motion.div
                                 layoutId="mobileNavActiveBg"
-                                className="absolute inset-0 rounded-xl bg-[rgba(192,193,255,0.1)]"
+                                className="absolute inset-0 rounded-xl bg-[var(--overlay-primary)]"
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                             />
                         )}

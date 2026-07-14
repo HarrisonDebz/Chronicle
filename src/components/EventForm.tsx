@@ -408,10 +408,10 @@ export default function EventForm({
                     text-[var(--text-main)]
                     outline-none
                     transition
-                    placeholder:text-[rgba(199,196,215,0.32)]
+                    placeholder:text-[var(--placeholder-text)]
                     focus:border-[var(--primary)]
                     focus:ring-2
-                    focus:ring-[rgba(192,193,255,0.24)]
+                    focus:ring-[var(--overlay-primary-ring)]
                 "
                             />
                             <Tag
@@ -454,10 +454,9 @@ export default function EventForm({
                 text-[var(--text-main)]
                 outline-none
                 transition
-                [color-scheme:dark]
                 focus:border-[var(--primary)]
                 focus:ring-2
-                focus:ring-[rgba(192,193,255,0.24)]
+                focus:ring-[var(--overlay-primary-ring)]
               "
                         />
 
@@ -502,7 +501,7 @@ export default function EventForm({
                                     transition
                                     focus:border-[var(--primary)]
                                     focus:ring-2
-                                    focus:ring-[rgba(192,193,255,0.24)]
+                                    focus:ring-[var(--overlay-primary-ring)]
                                 "
                             >
                                 <option value="none">No reminder</option>

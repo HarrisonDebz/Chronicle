@@ -26,8 +26,12 @@ function calculateNotificationTime(event: ChronicleEvent): number | null {
 
   const eventDate = new Date(event.date);
   const eventTime = eventDate.getTime();
+  const now = Date.now();
 
   if (event.type === 'countdown') {
+    // If the event has already passed, don't schedule a notification
+    if (eventTime < now) return null;
+
     switch (event.notifyBefore) {
       case 'on-day':
         // 9:00 AM on the day of the event
@@ -45,14 +49,14 @@ function calculateNotificationTime(event: ChronicleEvent): number | null {
     if (event.notifyBefore !== 'on-day') return null;
     
     // Memory anniversary: find next anniversary in the future
-    const now = new Date();
-    let anniversaryYear = now.getFullYear();
-    let anniversaryDate = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 9, 0, 0);
+    const nowLocal = new Date();
+    let anniversaryYear = nowLocal.getFullYear();
+    const anniversaryEnd = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 23, 59, 59, 999).getTime();
     
-    if (anniversaryDate.getTime() < now.getTime()) {
+    if (anniversaryEnd < nowLocal.getTime()) {
       anniversaryYear += 1;
-      anniversaryDate = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 9, 0, 0);
     }
+    const anniversaryDate = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 9, 0, 0);
     return anniversaryDate.getTime();
   }
   return null;
@@ -65,7 +69,7 @@ async function showNotificationForEvent(event: ChronicleEvent, notifyTime: numbe
 
   if (event.type === 'countdown') {
     const eventTime = new Date(event.date).getTime();
-    const diff = eventTime - notifyTime;
+    const diff = eventTime - Date.now();
     
     if (diff <= 0) {
       body = 'Starting now!';
@@ -134,6 +138,11 @@ async function checkAndTriggerNotifications() {
     for (const event of events) {
       const notifyTime = calculateNotificationTime(event);
       if (!notifyTime) continue;
+
+      // Double check if the event is a countdown and has already passed
+      if (event.type === 'countdown' && new Date(event.date).getTime() < now) {
+        continue;
+      }
 
       const notifiedKey = `${event.id}:${event.notifyBefore}:${notifyTime}`;
       if (now >= notifyTime && !notifiedKeys.has(notifiedKey)) {

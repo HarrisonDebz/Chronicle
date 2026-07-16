@@ -1,220 +1,170 @@
 # Chronicle
 
-Chronicle is a clean time-tracking web app for counting down to future events and counting up from meaningful past moments.
+Chronicle is a clean, modern, and high-performance time-tracking web application for counting down to future milestones and counting up from meaningful past moments. 
 
-It helps users track upcoming milestones, memories, deadlines, anniversaries, goals, and personal events in one simple dashboard.
+Designed with premium dark aesthetics and glassmorphic micro-animations, Chronicle serves as a personal time dashboard. It offers secure user account management, automatic offline-first capabilities (PWA), real-time cloud synchronization, and smart local/background notifications.
 
-## Features
+---
 
-* First-time user name capture
-* Personalized dashboard greeting
-* Create countdown events
-* Create count-up memory events
-* Automatically move expired countdowns into Memories
-* Store events in LocalStorage
-* Delete events with confirmation
-* Sort upcoming events by soonest first
-* Sort memories by newest first
-* Category icons
-* Progress indicators
+## Key Features
 
-  * Orange bars for upcoming events
-  * Green completed bars for memories
-* Form validation
-* Responsive card-based layout
-* Smooth UI animations with Framer Motion
+### 🌟 Interactive Dashboard
+- **Personalized Greeting**: Dynamic name capture and greeting tailored to the user profile.
+- **Milestone Overview**: Quick view of active countdowns and memory counts.
+- **Smart Transitions**: Expired countdown events are automatically transitioned to completed count-ups (Memories) dynamically.
+
+### 📅 Multi-Dimensional Tracking Views
+- **Dashboard**: Modern dashboard showing featured upcoming events and a chronological memory timeline.
+- **Monthly Calendar**: A full interactive monthly calendar grid to visualize schedule distributions.
+- **Anniversary Journey**: An interactive path tracing memory anniversaries over time.
+- **Statistics & Analytics**: Comprehensive breakdowns of events by category, progress metrics, tracking patterns, and streaks.
+- **Category Explorer**: Categorized organization (Birthday, Relationship, Education, Coding, Sports, Holiday, Goal, etc.) matching distinct icons.
+
+### 🔒 User Accounts & Cloud Sync
+- **Supabase Authentication**: Secure login and sign-up modal flow.
+- **Cloud Sync**: Automatic cloud syncing of events and profile settings with local storage fallback when offline.
+- **Manual Sync**: Direct sync triggering option in settings to pull/push the latest records.
+
+### 🔔 Smart Notification Engine
+- **iOS Compatibility**: Safe global `Notification` object wrappers preventing startup failures in browsers/tab-environments where Web Notifications are unsupported.
+- **Countdown Alerts**: Push notifications sent leading up to countdowns (e.g. 15-min, 1-hour, 1-day before, or day of event) with dynamic remaining time phrasing.
+- **Anniversary Rollovers**: Anniversary notifications persist for the entire day (suppressing rollovers to the next year until 11:59:59 PM) so users never miss an anniversary notification.
+- **Background Checks**: Service Worker background check tasks supporting periodic sync triggers.
+
+---
 
 ## Tech Stack
 
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* Framer Motion
-* date-fns
-* lucide-react
-* UUID
-* LocalStorage
+- **Frontend**: React 19, TypeScript, Vite
+- **Styling**: Tailwind CSS v4, Vanilla CSS variables
+- **Animations**: Framer Motion
+- **Database / Auth**: Supabase JS Client SDK
+- **Utilities**: date-fns (date computations), lucide-react (icons), uuid (event ID generation)
+- **Offline / PWA**: Vite PWA Plugin, Workbox service worker caching
+
+---
 
 ## Project Structure
 
 ```text
 src/
-├── components/
+├── assets/             # Images and icons
+├── components/         # Reusable React components
 │   ├── AddEventButton.tsx
 │   ├── AddEventModal.tsx
+│   ├── AppShell.tsx
+│   ├── AuthModal.tsx
+│   ├── CalendarDay.tsx
+│   ├── CalendarEventList.tsx
+│   ├── CalendarView.tsx
+│   ├── CategoryIcon.tsx
+│   ├── CategoryView.tsx
 │   ├── DeleteConfirmModal.tsx
 │   ├── EmptyState.tsx
 │   ├── EventCard.tsx
+│   ├── EventDetailsModal.tsx
+│   ├── EventFilterBar.tsx
 │   ├── EventForm.tsx
-│   └── EventSection.tsx
+│   ├── EventSection.tsx
+│   ├── FeaturedUpcomingCard.tsx
+│   ├── FilteredEmptyState.tsx
+│   ├── JourneyEventCard.tsx
+│   ├── JourneyView.tsx
+│   ├── MemoriesTimeline.tsx
+│   ├── MemoryTimelineItem.tsx
+│   ├── MobileBottomNav.tsx
+│   ├── MobileHeader.tsx
+│   ├── NamePromptModal.tsx
+│   ├── ProfileSettingsModal.tsx
+│   ├── Sidebar.tsx
+│   ├── StatisticsView.tsx
+│   ├── UpcomingMiniCard.tsx
+│   └── UpcomingSection.tsx
 │
-├── data/
-│   └── demoEvents.ts
+├── config/             # Supabase client and application configuration
+│   ├── app.ts
+│   └── supabaseClient.ts
 │
-├── hooks/
-│   ├── useEvents.ts
-│   └── useLocalStorage.ts
+├── context/            # Global React Context providers (Theme, etc.)
+│   └── ThemeContext.tsx
 │
-├── pages/
-│   └── Home.tsx
+├── hooks/              # Custom React hooks
+│   ├── useAuth.ts            # Supabase user session and profile hook
+│   ├── useEvents.ts          # Core CRUD handling for local/remote events
+│   ├── useNotifications.ts   # Safely-wrapped web push notification interface
+│   ├── useNow.ts             # Tick timer for relative time updates
+│   ├── useSync.ts            # Cloud sync synchronization logic
+│   └── useToast.tsx          # Dynamic notification banner alerts
 │
-├── types/
-│   └── Event.ts
+├── types/              # TypeScript typings
+│   ├── Event.ts
+│   ├── Filters.ts
+│   └── Navigation.ts
 │
-├── utils/
+├── utils/              # Calculation helpers and business logic
+│   ├── calendar.ts
 │   ├── categories.ts
 │   ├── date.ts
+│   ├── eventDisplay.ts
 │   ├── eventFilters.ts
+│   ├── eventSearch.ts
 │   ├── eventStatus.ts
-│   └── progress.ts
+│   ├── journey.ts
+│   ├── progress.ts
+│   └── statistics.ts
 │
-├── App.tsx
-├── index.css
-└── main.tsx
+├── App.tsx             # Main router and view resolver
+├── index.css           # Styling system base & custom CSS theme variables
+├── main.tsx            # Rendering entrypoint and providers wrapping
+└── sw.ts               # Workbox-based service worker for PWA caching & background tasks
 ```
+
+---
 
 ## Getting Started
 
 ### 1. Clone the repository
-
 ```bash
 git clone https://github.com/your-username/chronicle.git
 cd chronicle
 ```
 
-### 2. Install dependencies
+### 2. Configure Environment Variables
+Create a `.env` file in the root directory and add your Supabase configuration:
+```env
+VITE_SUPABASE_URL=your-supabase-project-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
 
+### 3. Install dependencies
 ```bash
 npm install
 ```
 
-### 3. Start the development server
-
+### 4. Start the development server
 ```bash
 npm run dev
 ```
+The app will be available locally at `http://localhost:5173/`.
 
-The app should be available at:
-
-```text
-http://localhost:5173/
-```
+---
 
 ## Available Scripts
 
-```bash
-npm run dev
-```
+### `npm run dev`
+Starts the Vite dev server locally.
 
-Starts the development server.
+### `npm run build`
+Bundles the React client environment and builds the service worker (`src/sw.ts`) in ES format for production.
 
-```bash
-npm run build
-```
+### `npm run lint`
+Runs ESLint audits across all TS, TSX, and JS files.
 
-Creates a production build.
+### `npm run preview`
+Launches a preview server to test the production build locally.
 
-```bash
-npm run preview
-```
-
-Previews the production build locally.
-
-```bash
-npm run lint
-```
-
-Runs linting checks.
-
-## Event Types
-
-Chronicle supports two main event types:
-
-### Countdown
-
-Used for future events.
-
-Examples:
-
-* Graduation
-* Exams
-* Birthdays
-* Project deadlines
-* World Cup matches
-
-### Count Up
-
-Used for past events and memories.
-
-Examples:
-
-* Started coding
-* Relationship anniversary
-* First GitHub commit
-* Started university
-* Personal milestones
-
-## Event Categories
-
-Current categories include:
-
-* Birthday
-* Relationship
-* Education
-* Coding
-* Sports
-* Holiday
-* Goal
-* Other
-
-Each category has its own icon.
-
-## Progress Logic
-
-Chronicle uses event status to determine how progress should appear.
-
-Upcoming countdowns display an orange remaining-time bar.
-
-Completed events and memories display a full green progress bar with a completion badge.
-
-Expired countdowns are automatically treated as memories.
-
-## Roadmap
-
-### Version 1
-
-* Countdown events
-* Count-up events
-* LocalStorage persistence
-* Event creation
-* Event deletion
-* Automatic completed-event handling
-* Category icons
-* Progress indicators
-
-### Version 2
-
-* Search and filtering
-* Count view
-* Calendar view
-* Journey/timeline view
-* Event editing
-* Recurring event logic
-* Import/export JSON
-* Dark mode
-* Better mobile polish
-
-## Why This Project Exists
-
-Chronicle started as a simple interactive countdown website, but the idea expanded into a personal time dashboard.
-
-The goal is to build a small, useful, polished project while keeping the scope realistic enough to finish.
-
-No overengineering. No backend too early. No unnecessary complexity.
-
-Just a clean app that does one thing well: tracking meaningful time.
+---
 
 ## License
 
-This project is open source and available under the MIT License.
+This project is licensed under the MIT License.

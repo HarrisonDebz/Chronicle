@@ -7,8 +7,12 @@ function calculateNotificationTime(event: ChronicleEvent): number | null {
 
   const eventDate = new Date(event.date);
   const eventTime = eventDate.getTime();
+  const now = Date.now();
 
   if (event.type === 'countdown') {
+    // If the event has already passed, don't schedule a notification
+    if (eventTime < now) return null;
+
     switch (event.notifyBefore) {
       case 'on-day':
         // 9:00 AM on the day of the event
@@ -26,14 +30,14 @@ function calculateNotificationTime(event: ChronicleEvent): number | null {
     if (event.notifyBefore !== 'on-day') return null;
     
     // Memory anniversary: find next anniversary in the future
-    const now = new Date();
-    let anniversaryYear = now.getFullYear();
-    let anniversaryDate = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 9, 0, 0);
+    const nowLocal = new Date();
+    let anniversaryYear = nowLocal.getFullYear();
+    const anniversaryEnd = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 23, 59, 59, 999).getTime();
     
-    if (anniversaryDate.getTime() < now.getTime()) {
+    if (anniversaryEnd < nowLocal.getTime()) {
       anniversaryYear += 1;
-      anniversaryDate = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 9, 0, 0);
     }
+    const anniversaryDate = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 9, 0, 0);
     return anniversaryDate.getTime();
   }
   return null;
@@ -161,7 +165,7 @@ export const useNotifications = () => {
 
             if (event.type === 'countdown') {
               const eventTime = new Date(event.date).getTime();
-              const diff = eventTime - notifyTime;
+              const diff = eventTime - Date.now();
               if (diff <= 0) body = 'Starting now!';
               else if (diff <= 20 * 60 * 1000) body = 'Starting in 15 minutes!';
               else if (diff <= 90 * 60 * 1000) body = 'Starting in 1 hour!';
@@ -188,7 +192,13 @@ export const useNotifications = () => {
         let body: string;
 
         if (event.type === 'countdown') {
-          body = 'Starting now!';
+          const eventTime = new Date(event.date).getTime();
+          const diff = eventTime - Date.now();
+          if (diff <= 0) body = 'Starting now!';
+          else if (diff <= 20 * 60 * 1000) body = 'Starting in 15 minutes!';
+          else if (diff <= 90 * 60 * 1000) body = 'Starting in 1 hour!';
+          else if (diff <= 25 * 60 * 60 * 1000) body = 'Starting tomorrow!';
+          else body = 'Starting today!';
         } else {
           const eventDate = new Date(event.date);
           const years = new Date().getFullYear() - eventDate.getFullYear();

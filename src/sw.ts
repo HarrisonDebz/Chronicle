@@ -152,7 +152,7 @@ async function checkAndTriggerNotifications() {
 
 // Native Notification Triggers scheduling (when supported)
 async function scheduleNotificationTriggers(events: ChronicleEvent[]) {
-  if (!('showTrigger' in Notification.prototype)) {
+  if (typeof Notification === 'undefined' || !('showTrigger' in Notification.prototype)) {
     await checkAndTriggerNotifications();
     return;
   }

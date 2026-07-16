@@ -41,19 +41,21 @@ function calculateNotificationTime(event: ChronicleEvent): number | null {
 
 export const useNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>(() => {
-    return 'Notification' in window ? Notification.permission : 'default';
+    return (typeof window !== 'undefined' && 'Notification' in window && window.Notification)
+      ? window.Notification.permission
+      : 'default';
   });
 
   const timersRef = useRef<number[]>([]);
 
   const requestPermission = useCallback(async () => {
-    if (!('Notification' in window)) {
+    if (typeof window === 'undefined' || !('Notification' in window) || !window.Notification) {
       console.warn('This browser does not support desktop notifications');
       return false;
     }
 
     try {
-      const result = await Notification.requestPermission();
+      const result = await window.Notification.requestPermission();
       setPermission(result);
       return result === 'granted';
     } catch (error) {
@@ -63,11 +65,11 @@ export const useNotifications = () => {
   }, []);
 
   const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
-    if (!('Notification' in window)) return;
+    if (typeof window === 'undefined' || !('Notification' in window) || !window.Notification) return;
     
-    if (Notification.permission === 'granted') {
+    if (window.Notification.permission === 'granted') {
       try {
-        new Notification(title, {
+        new window.Notification(title, {
           icon: '/pwa-icon-192.png',
           badge: '/pwa-icon-32.png',
           ...options,
@@ -88,7 +90,13 @@ export const useNotifications = () => {
   }, []);
 
   const registerPeriodicSync = useCallback(async () => {
-    if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
+    if (
+      'serviceWorker' in navigator &&
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      window.Notification &&
+      window.Notification.permission === 'granted'
+    ) {
       try {
         interface ServiceWorkerRegistrationWithPeriodicSync extends ServiceWorkerRegistration {
           periodicSync?: {
@@ -112,7 +120,14 @@ export const useNotifications = () => {
     timersRef.current.forEach(timer => window.clearTimeout(timer));
     timersRef.current = [];
 
-    if (Notification.permission !== 'granted') return;
+    if (
+      typeof window === 'undefined' ||
+      !('Notification' in window) ||
+      !window.Notification ||
+      window.Notification.permission !== 'granted'
+    ) {
+      return;
+    }
 
     const now = Date.now();
     const notifiedKeys = new Set<string>();

@@ -90,9 +90,14 @@ export const useNotifications = () => {
   const registerPeriodicSync = useCallback(async () => {
     if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
       try {
-        const registration = await navigator.serviceWorker.ready;
-        if ('periodicSync' in registration) {
-          await (registration as any).periodicSync.register('check-notifications', {
+        interface ServiceWorkerRegistrationWithPeriodicSync extends ServiceWorkerRegistration {
+          periodicSync?: {
+            register(tag: string, options?: { minInterval?: number }): Promise<void>;
+          };
+        }
+        const registration = await navigator.serviceWorker.ready as ServiceWorkerRegistrationWithPeriodicSync;
+        if (registration.periodicSync) {
+          await registration.periodicSync.register('check-notifications', {
             minInterval: 15 * 60 * 1000, // 15 minutes
           });
         }
@@ -137,7 +142,7 @@ export const useNotifications = () => {
         if (timeDiff < 24 * 60 * 60 * 1000) {
           const timerId = window.setTimeout(() => {
             let title = event.title;
-            let body = '';
+            let body: string;
 
             if (event.type === 'countdown') {
               const eventTime = new Date(event.date).getTime();
@@ -165,7 +170,7 @@ export const useNotifications = () => {
       } else if (timeDiff <= 0 && timeDiff > -5 * 60 * 1000) {
         // If event notification was due in the last 5 minutes, trigger it immediately
         let title = event.title;
-        let body = '';
+        let body: string;
 
         if (event.type === 'countdown') {
           body = 'Starting now!';

@@ -1,8 +1,13 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute } from 'workbox-precaching';
+import { precacheAndRoute, type PrecacheEntry } from 'workbox-precaching';
+import type { ChronicleEvent } from './types/Event';
+
+interface ServiceWorkerGlobalScopeWithTriggers extends ServiceWorkerGlobalScope {
+  TimestampTrigger: new (timestamp: number) => unknown;
+}
 
 declare const self: ServiceWorkerGlobalScope & {
-  __WB_MANIFEST: any;
+  __WB_MANIFEST: Array<string | PrecacheEntry>;
 };
 
 precacheAndRoute(self.__WB_MANIFEST);
@@ -16,7 +21,7 @@ self.addEventListener('activate', (event) => {
 });
 
 // Calculate when a notification should fire
-function calculateNotificationTime(event: any): number | null {
+function calculateNotificationTime(event: ChronicleEvent): number | null {
   if (event.notifyBefore === "none" || !event.notifyBefore) return null;
 
   const eventDate = new Date(event.date);
@@ -54,9 +59,9 @@ function calculateNotificationTime(event: any): number | null {
 }
 
 // Show notification helper
-async function showNotificationForEvent(event: any, notifyTime: number) {
+async function showNotificationForEvent(event: ChronicleEvent, notifyTime: number) {
   let title = event.title;
-  let body = '';
+  let body: string;
 
   if (event.type === 'countdown') {
     const eventTime = new Date(event.date).getTime();
@@ -87,7 +92,7 @@ async function showNotificationForEvent(event: any, notifyTime: number) {
     badge: '/pwa-icon-32.png',
     vibrate: [100, 50, 100],
     data: { eventId: event.id }
-  } as any);
+  } as NotificationOptions & { vibrate?: number[] });
 }
 
 // Persist notified keys
@@ -146,7 +151,7 @@ async function checkAndTriggerNotifications() {
 }
 
 // Native Notification Triggers scheduling (when supported)
-async function scheduleNotificationTriggers(events: any[]) {
+async function scheduleNotificationTriggers(events: ChronicleEvent[]) {
   if (!('showTrigger' in Notification.prototype)) {
     await checkAndTriggerNotifications();
     return;
@@ -154,7 +159,7 @@ async function scheduleNotificationTriggers(events: any[]) {
 
   const notifiedKeys = await getNotifiedKeys();
   const activeTriggers = await self.registration.getNotifications();
-  const activeIds = new Set(activeTriggers.map((n: any) => n.data?.eventId).filter(Boolean));
+  const activeIds = new Set(activeTriggers.map((n: Notification) => n.data?.eventId).filter(Boolean));
 
   for (const event of events) {
     const notifyTime = calculateNotificationTime(event);
@@ -163,7 +168,7 @@ async function scheduleNotificationTriggers(events: any[]) {
     const notifiedKey = `${event.id}:${event.notifyBefore}:${notifyTime}`;
     if (notifyTime > Date.now() && !notifiedKeys.has(notifiedKey) && !activeIds.has(event.id)) {
       let title = event.title;
-      let body = '';
+      let body: string;
       
       if (event.type === 'countdown') {
         const eventTime = new Date(event.date).getTime();
@@ -185,9 +190,9 @@ async function scheduleNotificationTriggers(events: any[]) {
           body,
           icon: '/pwa-icon-192.png',
           badge: '/pwa-icon-32.png',
-          showTrigger: new (self as any).TimestampTrigger(notifyTime),
+          showTrigger: new (self as unknown as ServiceWorkerGlobalScopeWithTriggers).TimestampTrigger(notifyTime),
           data: { eventId: event.id, key: notifiedKey }
-        } as any);
+        } as NotificationOptions);
       } catch (err) {
         console.error('Failed to register notification trigger', err);
       }
@@ -209,18 +214,19 @@ self.addEventListener('message', (event) => {
 });
 
 // Periodic sync background trigger
-self.addEventListener('periodicsync', (event: any) => {
-  if (event.tag === 'check-notifications') {
-    event.waitUntil(checkAndTriggerNotifications());
+self.addEventListener('periodicsync', (event) => {
+  const syncEvent = event as unknown as { tag: string; waitUntil(p: Promise<void>): void };
+  if (syncEvent.tag === 'check-notifications') {
+    syncEvent.waitUntil(checkAndTriggerNotifications());
   }
 });
 
 // Notification click behavior
-self.addEventListener('notificationclick', (event: any) => {
+self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
   
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList: any) => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.includes('/') && 'focus' in client) {
           return client.focus();

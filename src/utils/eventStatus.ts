@@ -8,6 +8,12 @@ export function isUpcomingCountdown(event: ChronicleEvent) {
     );
 }
 
+/**
+ * Returns true when an event should appear in the "Memories" section:
+ * - All `countup` events are memories by definition.
+ * - A `countdown` whose date has already passed becomes a memory.
+ */
 export function isCompletedEvent(event: ChronicleEvent) {
-    return !isUpcomingCountdown(event);
+    if (event.type === "countup") return true;
+    return !isAfter(parseISO(event.date), new Date());
 }

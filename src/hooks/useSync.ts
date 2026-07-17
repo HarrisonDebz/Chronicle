@@ -60,7 +60,6 @@ function latestTimestamp(...timestamps: (string | null | undefined)[]): Date {
 
 export function useSync(
     user: User | null,
-    _localEvents: ChronicleEvent[],
     setLocalEvents: (events: ChronicleEvent[]) => void
 ) {
     const [syncing, setSyncing] = useState(false);
@@ -188,7 +187,7 @@ export function useSync(
         }
     }, [setLocalEvents]);
 
-    // Trigger sync when user logs in
+    // Trigger sync when the user logs in
     useEffect(() => {
         if (!user) return;
         Promise.resolve().then(() => {
@@ -196,6 +195,23 @@ export function useSync(
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
+
+    // Re-sync whenever the tab becomes visible again (covers returning from
+    // another tab, waking the screen, etc.)
+    useEffect(() => {
+        if (!user) return;
+
+        function handleVisibilityChange() {
+            if (document.visibilityState === "visible" && user) {
+                performSync(user);
+            }
+        }
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [user, performSync]);
 
     // Manual trigger
     const triggerSync = () => {

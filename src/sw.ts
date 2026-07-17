@@ -1,6 +1,9 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, type PrecacheEntry } from 'workbox-precaching';
-import type { ChronicleEvent } from './types/Event';
+import {
+    calculateNotificationTime,
+    buildNotificationContent,
+} from './utils/notifications';
 
 interface ServiceWorkerGlobalScopeWithTriggers extends ServiceWorkerGlobalScope {
   TimestampTrigger: new (timestamp: number) => unknown;
@@ -20,86 +23,8 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Calculate when a notification should fire
-function calculateNotificationTime(event: ChronicleEvent): number | null {
-  if (event.notifyBefore === "none" || !event.notifyBefore) return null;
+// ── Notification persistence helpers ─────────────────────────────────────────
 
-  const eventDate = new Date(event.date);
-  const eventTime = eventDate.getTime();
-  const now = Date.now();
-
-  if (event.type === 'countdown') {
-    // If the event has already passed, don't schedule a notification
-    if (eventTime < now) return null;
-
-    switch (event.notifyBefore) {
-      case 'on-day':
-        // 9:00 AM on the day of the event
-        return new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate(), 9, 0, 0).getTime();
-      case '1-day':
-        return eventTime - 24 * 60 * 60 * 1000;
-      case '1-hour':
-        return eventTime - 60 * 60 * 1000;
-      case '15-min':
-        return eventTime - 15 * 60 * 1000;
-      default:
-        return null;
-    }
-  } else if (event.type === 'countup') {
-    if (event.notifyBefore !== 'on-day') return null;
-    
-    // Memory anniversary: find next anniversary in the future
-    const nowLocal = new Date();
-    let anniversaryYear = nowLocal.getFullYear();
-    const anniversaryEnd = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 23, 59, 59, 999).getTime();
-    
-    if (anniversaryEnd < nowLocal.getTime()) {
-      anniversaryYear += 1;
-    }
-    const anniversaryDate = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 9, 0, 0);
-    return anniversaryDate.getTime();
-  }
-  return null;
-}
-
-// Show notification helper
-async function showNotificationForEvent(event: ChronicleEvent, notifyTime: number) {
-  let title = event.title;
-  let body: string;
-
-  if (event.type === 'countdown') {
-    const eventTime = new Date(event.date).getTime();
-    const diff = eventTime - Date.now();
-    
-    if (diff <= 0) {
-      body = 'Starting now!';
-    } else if (diff <= 20 * 60 * 1000) {
-      body = 'Starting in 15 minutes!';
-    } else if (diff <= 90 * 60 * 1000) {
-      body = 'Starting in 1 hour!';
-    } else if (diff <= 25 * 60 * 60 * 1000) {
-      body = 'Starting tomorrow!';
-    } else {
-      body = 'Starting today!';
-    }
-  } else {
-    const eventDate = new Date(event.date);
-    const anniversaryDate = new Date(notifyTime);
-    const years = anniversaryDate.getFullYear() - eventDate.getFullYear();
-    title = `Anniversary: ${event.title}`;
-    body = `Today marks ${years} ${years === 1 ? 'year' : 'years'} since this memory occurred.`;
-  }
-
-  await self.registration.showNotification(title, {
-    body,
-    icon: '/pwa-icon-192.png',
-    badge: '/pwa-icon-32.png',
-    vibrate: [100, 50, 100],
-    data: { eventId: event.id }
-  } as NotificationOptions & { vibrate?: number[] });
-}
-
-// Persist notified keys
 async function getNotifiedKeys(): Promise<Set<string>> {
   try {
     const cache = await caches.open('chronicle-notifications');
@@ -124,7 +49,24 @@ async function saveNotifiedKeys(keys: Set<string>) {
   }
 }
 
-// Scheduled check and trigger
+// ── Show notification ─────────────────────────────────────────────────────────
+
+async function showNotificationForEvent(
+  event: Parameters<typeof buildNotificationContent>[0],
+  notifyTime: number
+) {
+  const { title, body } = buildNotificationContent(event, notifyTime);
+  await self.registration.showNotification(title, {
+    body,
+    icon: '/pwa-icon-192.png',
+    badge: '/pwa-icon-32.png',
+    vibrate: [100, 50, 100],
+    data: { eventId: event.id },
+  } as NotificationOptions & { vibrate?: number[] });
+}
+
+// ── Scheduled check and trigger ───────────────────────────────────────────────
+
 async function checkAndTriggerNotifications() {
   try {
     const cache = await caches.open('chronicle-notifications');
@@ -139,7 +81,7 @@ async function checkAndTriggerNotifications() {
       const notifyTime = calculateNotificationTime(event);
       if (!notifyTime) continue;
 
-      // Double check if the event is a countdown and has already passed
+      // Skip countdowns that have already passed
       if (event.type === 'countdown' && new Date(event.date).getTime() < now) {
         continue;
       }
@@ -159,8 +101,9 @@ async function checkAndTriggerNotifications() {
   }
 }
 
-// Native Notification Triggers scheduling (when supported)
-async function scheduleNotificationTriggers(events: ChronicleEvent[]) {
+// ── Native Notification Triggers (when supported) ────────────────────────────
+
+async function scheduleNotificationTriggers(events: Parameters<typeof calculateNotificationTime>[0][]) {
   if (typeof Notification === 'undefined' || !('showTrigger' in Notification.prototype)) {
     await checkAndTriggerNotifications();
     return;
@@ -176,31 +119,14 @@ async function scheduleNotificationTriggers(events: ChronicleEvent[]) {
 
     const notifiedKey = `${event.id}:${event.notifyBefore}:${notifyTime}`;
     if (notifyTime > Date.now() && !notifiedKeys.has(notifiedKey) && !activeIds.has(event.id)) {
-      let title = event.title;
-      let body: string;
-      
-      if (event.type === 'countdown') {
-        const eventTime = new Date(event.date).getTime();
-        const diff = eventTime - notifyTime;
-        if (diff <= 20 * 60 * 1000) body = 'Starting in 15 minutes!';
-        else if (diff <= 90 * 60 * 1000) body = 'Starting in 1 hour!';
-        else if (diff <= 25 * 60 * 60 * 1000) body = 'Starting tomorrow!';
-        else body = 'Starting today!';
-      } else {
-        const eventDate = new Date(event.date);
-        const anniversaryDate = new Date(notifyTime);
-        const years = anniversaryDate.getFullYear() - eventDate.getFullYear();
-        title = `Anniversary: ${event.title}`;
-        body = `Today marks ${years} ${years === 1 ? 'year' : 'years'} since this memory occurred.`;
-      }
-
+      const { title, body } = buildNotificationContent(event, notifyTime);
       try {
         await self.registration.showNotification(title, {
           body,
           icon: '/pwa-icon-192.png',
           badge: '/pwa-icon-32.png',
           showTrigger: new (self as unknown as ServiceWorkerGlobalScopeWithTriggers).TimestampTrigger(notifyTime),
-          data: { eventId: event.id, key: notifiedKey }
+          data: { eventId: event.id, key: notifiedKey },
         } as NotificationOptions);
       } catch (err) {
         console.error('Failed to register notification trigger', err);
@@ -209,7 +135,8 @@ async function scheduleNotificationTriggers(events: ChronicleEvent[]) {
   }
 }
 
-// Message Listener
+// ── Message Listener ──────────────────────────────────────────────────────────
+
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SYNC_EVENTS') {
     const events = event.data.events;
@@ -222,7 +149,8 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Periodic sync background trigger
+// ── Periodic sync ─────────────────────────────────────────────────────────────
+
 self.addEventListener('periodicsync', (event) => {
   const syncEvent = event as unknown as { tag: string; waitUntil(p: Promise<void>): void };
   if (syncEvent.tag === 'check-notifications') {
@@ -230,10 +158,11 @@ self.addEventListener('periodicsync', (event) => {
   }
 });
 
-// Notification click behavior
+// ── Notification click ────────────────────────────────────────────────────────
+
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
-  
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {

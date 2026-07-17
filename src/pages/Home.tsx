@@ -65,7 +65,7 @@ export default function Home() {
         syncing,
         lastSynced,
         triggerSync,
-    } = useSync(user, events, setEvents);
+    } = useSync(user, setEvents);
 
     const [authModalOpen, setAuthModalOpen] = useState(false);
 
@@ -154,13 +154,16 @@ export default function Home() {
     const showingSingleSection =
         showUpcoming !== showMemories;
 
-    const today =
-        new Intl.DateTimeFormat("en", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-        }).format(new Date());
+    const today = useMemo(
+        () =>
+            new Intl.DateTimeFormat("en", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+            }).format(new Date()),
+        []
+    );
 
     function clearFilters() {
         setFilters(DEFAULT_FILTERS);

@@ -4,7 +4,7 @@ import {
     Clock,
 } from "lucide-react";
 
-import type { ChronicleEvent, EventCategory } from "../types/Event";
+import type { ChronicleEvent } from "../types/Event";
 
 import { CATEGORY_COLORS, getCategoryInfo } from "../utils/categories";
 import { formatMemoryDate } from "../utils/eventDisplay";

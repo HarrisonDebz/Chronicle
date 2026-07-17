@@ -53,20 +53,23 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               initial={{ opacity: 0, y: 20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-              className={`pointer-events-auto flex items-center justify-between p-4 rounded-xl shadow-lg border backdrop-blur-md ${toast.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400' :
-                  toast.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400' :
-                    'bg-zinc-100/80 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100'
-                }`}
+              className={`pointer-events-auto flex items-center justify-between p-4 rounded-xl shadow-lg border backdrop-blur-md ${
+                toast.type === 'success'
+                  ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                  : toast.type === 'error'
+                  ? 'bg-red-500/10 border-red-500/20 text-red-300'
+                  : 'bg-[var(--surface-card)] border-[var(--border-soft)] text-[var(--text-main)]'
+              }`}
             >
               <div className="flex items-center gap-3">
-                {toast.type === 'success' && <CheckCircle2 size={20} className="text-green-500 dark:text-green-400" />}
-                {toast.type === 'error' && <AlertCircle size={20} className="text-red-500 dark:text-red-400" />}
-                {toast.type === 'info' && <Info size={20} className="text-blue-500 dark:text-blue-400" />}
+                {toast.type === 'success' && <CheckCircle2 size={20} className="text-green-400" />}
+                {toast.type === 'error' && <AlertCircle size={20} className="text-red-300" />}
+                {toast.type === 'info' && <Info size={20} className="text-[var(--primary)]" />}
                 <p className="font-medium text-sm">{toast.message}</p>
               </div>
               <button
                 onClick={() => removeToast(toast.id)}
-                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1"
+                className="text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors p-1"
                 aria-label="Close toast"
               >
                 <X size={16} />

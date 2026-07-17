@@ -30,7 +30,7 @@ interface Props {
     syncing: boolean;
     lastSynced: string | null;
     onClose: () => void;
-    onSave: (name: string, photoUrl: string) => void;
+    onSave: (name: string, photoUrl: string) => Promise<void>;
     onReset: () => void;
     onSignOut: () => void;
     onOpenAuth: () => void;
@@ -66,7 +66,7 @@ export default function ProfileSettingsModal({
         reader.readAsDataURL(file);
     }
 
-    function handleSubmit(event: FormEvent) {
+    async function handleSubmit(event: FormEvent) {
         event.preventDefault();
 
         if (!name.trim()) {
@@ -74,8 +74,16 @@ export default function ProfileSettingsModal({
             return;
         }
 
-        onSave(name.trim(), photoUrl.trim());
-        onClose();
+        try {
+            await onSave(name.trim(), photoUrl.trim());
+            onClose();
+        } catch (e) {
+            const message =
+                e instanceof Error
+                    ? e.message
+                    : "Failed to save profile. Please try again.";
+            setError(message);
+        }
     }
 
     function handleReset() {

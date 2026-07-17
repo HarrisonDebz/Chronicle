@@ -1,47 +1,9 @@
 import { useState, useCallback, useRef } from 'react';
 import type { ChronicleEvent } from '../types/Event';
-
-// Calculate when a notification should fire
-function calculateNotificationTime(event: ChronicleEvent): number | null {
-  if (event.notifyBefore === "none" || !event.notifyBefore) return null;
-
-  const eventDate = new Date(event.date);
-  const eventTime = eventDate.getTime();
-  const now = Date.now();
-
-  if (event.type === 'countdown') {
-    // If the event has already passed, don't schedule a notification
-    if (eventTime < now) return null;
-
-    switch (event.notifyBefore) {
-      case 'on-day':
-        // 9:00 AM on the day of the event
-        return new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate(), 9, 0, 0).getTime();
-      case '1-day':
-        return eventTime - 24 * 60 * 60 * 1000;
-      case '1-hour':
-        return eventTime - 60 * 60 * 1000;
-      case '15-min':
-        return eventTime - 15 * 60 * 1000;
-      default:
-        return null;
-    }
-  } else if (event.type === 'countup') {
-    if (event.notifyBefore !== 'on-day') return null;
-    
-    // Memory anniversary: find next anniversary in the future
-    const nowLocal = new Date();
-    let anniversaryYear = nowLocal.getFullYear();
-    const anniversaryEnd = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 23, 59, 59, 999).getTime();
-    
-    if (anniversaryEnd < nowLocal.getTime()) {
-      anniversaryYear += 1;
-    }
-    const anniversaryDate = new Date(anniversaryYear, eventDate.getMonth(), eventDate.getDate(), 9, 0, 0);
-    return anniversaryDate.getTime();
-  }
-  return null;
-}
+import {
+    calculateNotificationTime,
+    buildNotificationContent,
+} from '../utils/notifications';
 
 export const useNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>(() => {
@@ -70,7 +32,7 @@ export const useNotifications = () => {
 
   const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
     if (typeof window === 'undefined' || !('Notification' in window) || !window.Notification) return;
-    
+
     if (window.Notification.permission === 'granted') {
       try {
         new window.Notification(title, {
@@ -155,61 +117,24 @@ export const useNotifications = () => {
       if (notifiedKeys.has(notifiedKey)) return;
 
       const timeDiff = notifyTime - now;
-      if (timeDiff > 0) {
-        // Limit local schedule window to 24h to avoid integer overflow and excessive timers.
-        // The service worker handles larger/longer notification windows.
-        if (timeDiff < 24 * 60 * 60 * 1000) {
-          const timerId = window.setTimeout(() => {
-            let title = event.title;
-            let body: string;
 
-            if (event.type === 'countdown') {
-              const eventTime = new Date(event.date).getTime();
-              const diff = eventTime - Date.now();
-              if (diff <= 0) body = 'Starting now!';
-              else if (diff <= 20 * 60 * 1000) body = 'Starting in 15 minutes!';
-              else if (diff <= 90 * 60 * 1000) body = 'Starting in 1 hour!';
-              else if (diff <= 25 * 60 * 60 * 1000) body = 'Starting tomorrow!';
-              else body = 'Starting today!';
-            } else {
-              const eventDate = new Date(event.date);
-              const anniversaryDate = new Date(notifyTime);
-              const years = anniversaryDate.getFullYear() - eventDate.getFullYear();
-              title = `Anniversary: ${event.title}`;
-              body = `Today marks ${years} ${years === 1 ? 'year' : 'years'} since this memory occurred.`;
-            }
-
-            sendNotification(title, { body });
-
-            notifiedKeys.add(notifiedKey);
-            localStorage.setItem('chronicle_notified_keys', JSON.stringify([...notifiedKeys]));
-          }, timeDiff);
-          timersRef.current.push(timerId);
-        }
-      } else if (timeDiff <= 0 && timeDiff > -5 * 60 * 1000) {
-        // If event notification was due in the last 5 minutes, trigger it immediately
-        let title = event.title;
-        let body: string;
-
-        if (event.type === 'countdown') {
-          const eventTime = new Date(event.date).getTime();
-          const diff = eventTime - Date.now();
-          if (diff <= 0) body = 'Starting now!';
-          else if (diff <= 20 * 60 * 1000) body = 'Starting in 15 minutes!';
-          else if (diff <= 90 * 60 * 1000) body = 'Starting in 1 hour!';
-          else if (diff <= 25 * 60 * 60 * 1000) body = 'Starting tomorrow!';
-          else body = 'Starting today!';
-        } else {
-          const eventDate = new Date(event.date);
-          const years = new Date().getFullYear() - eventDate.getFullYear();
-          title = `Anniversary: ${event.title}`;
-          body = `Today marks ${years} ${years === 1 ? 'year' : 'years'} since this memory occurred.`;
-        }
-
+      const fire = () => {
+        const { title, body } = buildNotificationContent(event, notifyTime);
         sendNotification(title, { body });
-
         notifiedKeys.add(notifiedKey);
         localStorage.setItem('chronicle_notified_keys', JSON.stringify([...notifiedKeys]));
+      };
+
+      if (timeDiff > 0) {
+        // Limit local schedule window to 24 h to avoid integer overflow and excessive timers.
+        // The service worker handles larger / longer notification windows.
+        if (timeDiff < 24 * 60 * 60 * 1000) {
+          const timerId = window.setTimeout(fire, timeDiff);
+          timersRef.current.push(timerId);
+        }
+      } else if (timeDiff >= -5 * 60 * 1000) {
+        // If the notification was due in the last 5 minutes, fire immediately
+        fire();
       }
     });
   }, [sendNotification]);
@@ -227,4 +152,3 @@ export const useNotifications = () => {
     scheduleNotifications,
   };
 };
-

@@ -6,7 +6,7 @@ import {
 
 import type { ChronicleEvent, EventCategory } from "../types/Event";
 
-import { getCategoryInfo } from "../utils/categories";
+import { CATEGORY_COLORS, getCategoryInfo } from "../utils/categories";
 import { formatMemoryDate } from "../utils/eventDisplay";
 import { getProgress } from "../utils/progress";
 import {
@@ -19,18 +19,6 @@ import {
 
 import { useNow } from "../hooks/useNow";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const CATEGORY_COLORS: Record<EventCategory, string> = {
-    birthday: "#c0c1ff",
-    relationship: "#ff9f68",
-    education: "#9fd3c7",
-    coding: "#7dd3fc",
-    sports: "#fde68a",
-    holiday: "#f9a8d4",
-    goal: "#a5b4fc",
-    other: "#94a3b8",
-};
 
 function liveCountdown(date: string, now: Date) {
     const target = new Date(date).getTime();
